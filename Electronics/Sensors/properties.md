@@ -22,8 +22,8 @@ Of these 11, it is proposed that the following are of use in tackling the proble
 * Infrared Receiver
 * Photo Interrupter
 * Infrared Emitter
-* Light Dependent Resistor - Not sure why a CdS version has been provided as it is not RoHS compliant and therefore has been illegal for use in industrial design throughout Europe since 2006. However, it is the only sensor provided that can respond to visable wavelengths of light, and so will be the basis for the colour detection electronics.
+* Light Dependent Resistor - Not sure why a CdS version has been provided as it is not RoHS compliant and therefore has been illegal for use in industrial design throughout Europe since 2006. However, it is the only sensor provided that can respond to visable wavelengths of light, and so will have to be the basis for the colour detection electronics.
 * IR Phototransistor - Functionally equivalent to LDR, allowing light sensing, but in the infrared wavelength only.
 * ~~Hall Effect Sensor~~ - No real use to problem statement.
-* Ultrasonic Distance Sensor - 
+* Ultrasonic Distance Sensor - This is fairly inaccurate in comparison to the other distance sensors but could be useful.
 
