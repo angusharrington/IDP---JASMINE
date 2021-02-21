@@ -1,0 +1,200 @@
+#VRML_SIM R2021a utf8
+WorldInfo {
+  coordinateSystem "NUE"
+  contactProperties [
+    ContactProperties {
+      material1 "Floor"
+      material2 "Smooth"
+      coulombFriction [
+        0
+      ]
+    }
+  ]
+}
+Viewpoint {
+  orientation 0.07189532254155469 -0.9877940786592401 -0.13818075395071766 3.90480755352678
+  position 0.9920470925955869 0.5057013474784198 -1.0467876861732834
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  contactMaterial "Floor"
+  floorTileSize 0.2 0.2
+}
+Robot {
+  translation 0 0.09 0
+  children [
+    DistanceSensor {
+      translation 0.235 0 0
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0 1 1
+            metalness 0
+          }
+          geometry Box {
+            size 0.005 0.01 0.02
+          }
+        }
+      ]
+    }
+    DEF Body Group {
+      children [
+        Transform {
+          translation -0.06 -0.03 0
+          children [
+            DEF Ball Shape {
+              appearance PBRAppearance {
+                metalness 0
+              }
+              geometry Sphere {
+                radius 0.02
+                subdivision 2
+              }
+            }
+          ]
+        }
+        DEF Box Shape {
+          appearance DEF Body_App PBRAppearance {
+            baseColor 1 0 0
+            metalness 0
+          }
+          geometry Box {
+            size 0.2 0.06 0.1
+          }
+        }
+      ]
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        anchor 0.05 -0.02 0.06
+      }
+      device [
+        DEF Wheel1 RotationalMotor {
+        }
+      ]
+      endPoint Solid {
+        translation 0.05 -0.02 0.06
+        rotation 1 0 0 1.5707963267948968
+        children [
+          DEF Wheel Shape {
+            appearance PBRAppearance {
+              baseColor 0 0 1
+              metalness 0
+            }
+            geometry Cylinder {
+              height 0.02
+              radius 0.035
+            }
+          }
+        ]
+        contactMaterial "Wheel"
+        boundingObject USE Wheel
+        physics DEF Physics_Wheel Physics {
+        }
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        anchor 0.05 -0.02 -0.06
+      }
+      device [
+        DEF Wheel2 RotationalMotor {
+        }
+      ]
+      endPoint Solid {
+        translation 0.05 -0.02 -0.06
+        rotation 1 0 0 1.5707962834414613
+        children [
+          USE Wheel
+        ]
+        name "solid(1)"
+        contactMaterial "Wheel"
+        boundingObject USE Wheel
+        physics USE Physics_Wheel
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        anchor 0.09 0.025 0
+      }
+      device [
+        RotationalMotor {
+        }
+      ]
+      endPoint Solid {
+        translation 0.22499999999999995 3.9089946557435695e-12 4.42096617377035e-07
+        rotation -1 0 0 1.7684257141564354e-05
+        children [
+          DEF Holder Group {
+            children [
+              Shape {
+                appearance DEF Holder_App PBRAppearance {
+                  baseColor 1 0 1
+                  metalness 0
+                }
+                geometry Box {
+                  size 0.015 0.06 0.1
+                }
+              }
+              Transform {
+                translation -0.045 0 -0.0575
+                children [
+                  Shape {
+                    appearance USE Holder_App
+                    geometry Box {
+                      size 0.105 0.06 0.015
+                    }
+                  }
+                ]
+              }
+              Transform {
+                translation -0.12 0.0225 -0.0575
+                children [
+                  Shape {
+                    appearance USE Holder_App
+                    geometry Box {
+                      size 0.045 0.015 0.015
+                    }
+                  }
+                ]
+              }
+              Transform {
+                translation -0.12 0.0225 0.0575
+                children [
+                  Shape {
+                    appearance USE Holder_App
+                    geometry Box {
+                      size 0.045 0.015 0.015
+                    }
+                  }
+                ]
+              }
+              Transform {
+                translation -0.045 0 0.0575
+                children [
+                  Shape {
+                    appearance USE Holder_App
+                    geometry Box {
+                      size 0.105 0.06 0.015
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+        name "solid(2)"
+        boundingObject USE Holder
+        physics Physics {
+        }
+      }
+    }
+  ]
+  contactMaterial "Smooth"
+  boundingObject USE Body
+  physics DEF Physics_Body Physics {
+  }
+}
