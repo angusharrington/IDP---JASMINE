@@ -1,0 +1,25 @@
+@startmindmap
+
+* Project \n**JASMINE**
+ * Electronics
+  * Luke Mockler
+   *_ WeBots Integration
+   *_ Sensor Simulation
+  * Harry Rodgers
+   *_ Schematic Design
+   *_ PCB Design
+  
+ * Mechanics
+  * Chris Zhang
+  * Leo Zichuan
+
+ * Software
+  * Angus Harrington
+  * Oscar Saharoy
+ * Project Management
+  * Harry Rodgers
+   *_ Reports
+   *_ Presentations
+   *_ Documentation
+  
+@endmindmap
