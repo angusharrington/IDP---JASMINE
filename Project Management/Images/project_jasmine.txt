@@ -1,0 +1,30 @@
+@startmindmap
+
+'Compatible with OrgMode 
+
+* Project \nJASMINE
+
+** Electronics
+*** Colour Detection
+*** Distance Detection
+*** Signal Processing
+** Project \nManagement
+*** Reports
+*** Presentations
+*** Timeline
+*** Information Sharing
+
+left side
+
+** Mechanics
+*** Device Movement
+*** Block Capture
+*** Block Transportation
+*** Collision Mechanics
+** Software
+*** Block Location
+*** Sensor Processing
+*** Actuactor Processing
+*** Error Handling
+
+@endmindmap
