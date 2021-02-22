@@ -1,4 +1,4 @@
 # PROJECT JASMINE
 
 System-level overview:
-[IDP---JASMINE](https://github.com/angusharrington/IDP---JASMINE/Project Management/Images/jasmine_project.png)
+![jasmine_project](https://user-images.githubusercontent.com/79329082/108656912-0158b400-74c2-11eb-8baf-43078a239cf8.png)
