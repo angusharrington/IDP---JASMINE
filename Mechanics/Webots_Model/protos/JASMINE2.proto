@@ -47,6 +47,7 @@ PROTO JASMINE2 [
       device [
         DEF Wheel1 RotationalMotor {
           name "RightWheelMotor"
+          maxVelocity 100
         }
       ]
       endPoint Solid {
@@ -79,6 +80,7 @@ PROTO JASMINE2 [
       device [
         DEF Wheel2 RotationalMotor {
           name "LeftWheelMotor"
+          maxVelocity 100
         }
       ]
       endPoint Solid {
