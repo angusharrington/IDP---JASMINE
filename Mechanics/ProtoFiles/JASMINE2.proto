@@ -8,50 +8,6 @@ PROTO JASMINE2 [
   translation IS translation
   rotation IS rotation
   children [
-    DistanceSensor {
-      translation 0.235 0 -0.04
-      rotation 0 1 0 4.07987e-06
-      children [
-        Shape {
-          appearance PBRAppearance {
-            baseColor 0 1 1
-            metalness 0
-          }
-          geometry Box {
-            size 0.005 0.01 0.02
-          }
-        }
-      ]
-      name "DistanceSensorFrontLeft"
-    }
-    LightSensor {
-      translation 0.235 0 0
-      children [
-        Shape {
-          appearance PBRAppearance {
-          }
-          geometry Box {
-            size 0.005 0.01 0.02
-          }
-        }
-      ]
-    }
-    DistanceSensor {
-      translation 0.235 0 0.0419054
-      rotation 0 1 0 4.07987e-06
-      children [
-        Shape {
-          appearance PBRAppearance {
-            baseColor 0 1 1
-            metalness 0
-          }
-          geometry Box {
-            size 0.005 0.01 0.02
-          }
-        }
-      ]
-      name "DistanceSensorFrontRight"
-    }
     DEF Body Group {
       children [
         Transform {
@@ -81,7 +37,7 @@ PROTO JASMINE2 [
     }
     HingeJoint {
       jointParameters HingeJointParameters {
-        position -1.809112859518791e-10
+        position 2.5253684986159427e-09
         axis 0 0 -1
         anchor 0.05 -0.02 0.06
       }
@@ -92,7 +48,7 @@ PROTO JASMINE2 [
       ]
       endPoint Solid {
         translation 0.05 -0.02 0.06
-        rotation 1 2.7136692892781862e-09 2.7136692936963324e-09 1.5707963251667885
+        rotation 1 1.5414406829461546e-09 1.5414406854557855e-09 1.5707963251667885
         children [
           DEF Wheel Shape {
             appearance PBRAppearance {
@@ -113,7 +69,7 @@ PROTO JASMINE2 [
     }
     HingeJoint {
       jointParameters HingeJointParameters {
-        position -1.808712987310216e-10
+        position 2.525400603234157e-09
         axis 0 0 -1
         anchor 0.05 -0.02 -0.06
       }
@@ -124,7 +80,7 @@ PROTO JASMINE2 [
       ]
       endPoint Solid {
         translation 0.05 -0.02 -0.06
-        rotation 1 2.71306948096532e-09 2.7130696030036767e-09 1.5707962818132422
+        rotation 1 1.5408048287137514e-09 1.5408048980217043e-09 1.5707962818132422
         children [
           USE Wheel
         ]
@@ -136,8 +92,8 @@ PROTO JASMINE2 [
     }
     HingeJoint {
       jointParameters HingeJointParameters {
-        position -4.675486271047294e-07
-        axis 0 0 -1
+        position -1.8326478135820424e-07
+        axis 0 0 1
         anchor 0.09 0.025 0
       }
       device [
@@ -146,9 +102,53 @@ PROTO JASMINE2 [
         }
       ]
       endPoint Solid {
-        translation 0.225 4.23354e-07 1.17823e-08
-        rotation -0.9678759976550896 -4.59489998886776e-07 0.2514280277991179 1.5307170238937507e-05
+        translation 0.22499999999999995 3.3549400001511853e-07 1.1782299999999994e-08
+        rotation -0.977489065344794 -1.4597221690602818e-07 0.2109860827906425 1.5156700561127987e-05
         children [
+          DistanceSensor {
+            translation 0.01 0 0.0419063
+            rotation 0 1 0 4.07987e-06
+            children [
+              Shape {
+                appearance PBRAppearance {
+                  baseColor 0 1 1
+                  metalness 0
+                }
+                geometry Box {
+                  size 0.005 0.01 0.02
+                }
+              }
+            ]
+            name "DistanceSensorFrontRight"
+          }
+          LightSensor {
+            translation 0.01 0 0
+            children [
+              Shape {
+                appearance PBRAppearance {
+                }
+                geometry Box {
+                  size 0.005 0.01 0.02
+                }
+              }
+            ]
+          }
+          DistanceSensor {
+            translation 0.01 0 -0.0399997
+            rotation 0 1 0 4.07987e-06
+            children [
+              Shape {
+                appearance PBRAppearance {
+                  baseColor 0 1 1
+                  metalness 0
+                }
+                geometry Box {
+                  size 0.005 0.01 0.02
+                }
+              }
+            ]
+            name "DistanceSensorFrontLeft"
+          }
           DEF Holder Group {
             children [
               Shape {
