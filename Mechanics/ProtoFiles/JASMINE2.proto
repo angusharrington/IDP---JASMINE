@@ -8,6 +8,8 @@ PROTO JASMINE2 [
   translation IS translation
   rotation IS rotation
   children [
+    GPS {
+    }
     DEF Body Group {
       children [
         Transform {
@@ -102,8 +104,8 @@ PROTO JASMINE2 [
         }
       ]
       endPoint Solid {
-        translation 0.22499999999999995 3.3549400001511853e-07 1.1782299999999994e-08
-        rotation -0.977489065344794 -1.4597221690602818e-07 0.2109860827906425 1.5156700561127987e-05
+        translation 0.22499999999999967 3.3549400008450747e-07 1.1782299999999961e-08
+        rotation -0.9774890414691595 -1.459722133405878e-07 0.21098619340535701 1.5156993556899551e-05
         children [
           DistanceSensor {
             translation 0.01 0 0.0419063
@@ -214,9 +216,11 @@ PROTO JASMINE2 [
       }
     }
   ]
+  name "robot(1)"
   contactMaterial "Smooth"
   boundingObject USE Body
   physics DEF Physics_Body Physics {
   }
+  controller "void"
 }
 }
