@@ -1,0 +1,222 @@
+PROTO JASMINE2 [
+  field SFVec3f    translation  0 0 0
+  field SFRotation rotation     0 1 0 0
+  field SFFloat    bodyMass     1
+]
+{
+	Robot {
+  translation IS translation
+  rotation IS rotation
+  children [
+    DistanceSensor {
+      translation 0.235 0 -0.04
+      rotation 0 1 0 4.07987e-06
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0 1 1
+            metalness 0
+          }
+          geometry Box {
+            size 0.005 0.01 0.02
+          }
+        }
+      ]
+      name "DistanceSensorFrontLeft"
+    }
+    LightSensor {
+      translation 0.235 0 0
+      children [
+        Shape {
+          appearance PBRAppearance {
+          }
+          geometry Box {
+            size 0.005 0.01 0.02
+          }
+        }
+      ]
+    }
+    DistanceSensor {
+      translation 0.235 0 0.0419054
+      rotation 0 1 0 4.07987e-06
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0 1 1
+            metalness 0
+          }
+          geometry Box {
+            size 0.005 0.01 0.02
+          }
+        }
+      ]
+      name "DistanceSensorFrontRight"
+    }
+    DEF Body Group {
+      children [
+        Transform {
+          translation -0.06 -0.03 0
+          children [
+            DEF Ball Shape {
+              appearance PBRAppearance {
+                metalness 0
+              }
+              geometry Sphere {
+                radius 0.02
+                subdivision 2
+              }
+            }
+          ]
+        }
+        DEF Box Shape {
+          appearance DEF Body_App PBRAppearance {
+            baseColor 1 0 0
+            metalness 0
+          }
+          geometry Box {
+            size 0.2 0.06 0.1
+          }
+        }
+      ]
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        position -1.809112859518791e-10
+        axis 0 0 -1
+        anchor 0.05 -0.02 0.06
+      }
+      device [
+        DEF Wheel1 RotationalMotor {
+          name "RightWheelMotor"
+        }
+      ]
+      endPoint Solid {
+        translation 0.05 -0.02 0.06
+        rotation 1 2.7136692892781862e-09 2.7136692936963324e-09 1.5707963251667885
+        children [
+          DEF Wheel Shape {
+            appearance PBRAppearance {
+              baseColor 0 0 1
+              metalness 0
+            }
+            geometry Cylinder {
+              height 0.02
+              radius 0.035
+            }
+          }
+        ]
+        contactMaterial "Wheel"
+        boundingObject USE Wheel
+        physics DEF Physics_Wheel Physics {
+        }
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        position -1.808712987310216e-10
+        axis 0 0 -1
+        anchor 0.05 -0.02 -0.06
+      }
+      device [
+        DEF Wheel2 RotationalMotor {
+          name "LeftWheelMotor"
+        }
+      ]
+      endPoint Solid {
+        translation 0.05 -0.02 -0.06
+        rotation 1 2.71306948096532e-09 2.7130696030036767e-09 1.5707962818132422
+        children [
+          USE Wheel
+        ]
+        name "solid(1)"
+        contactMaterial "Wheel"
+        boundingObject USE Wheel
+        physics USE Physics_Wheel
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        position -4.675486271047294e-07
+        axis 0 0 -1
+        anchor 0.09 0.025 0
+      }
+      device [
+        RotationalMotor {
+          name "ClawMotor"
+        }
+      ]
+      endPoint Solid {
+        translation 0.225 4.23354e-07 1.17823e-08
+        rotation -0.9678759976550896 -4.59489998886776e-07 0.2514280277991179 1.5307170238937507e-05
+        children [
+          DEF Holder Group {
+            children [
+              Shape {
+                appearance DEF Holder_App PBRAppearance {
+                  baseColor 1 0 1
+                  metalness 0
+                }
+                geometry Box {
+                  size 0.015 0.06 0.1
+                }
+              }
+              Transform {
+                translation -0.045 0 -0.0575
+                children [
+                  Shape {
+                    appearance USE Holder_App
+                    geometry Box {
+                      size 0.105 0.06 0.015
+                    }
+                  }
+                ]
+              }
+              Transform {
+                translation -0.12 0.0225 -0.0575
+                children [
+                  Shape {
+                    appearance USE Holder_App
+                    geometry Box {
+                      size 0.045 0.015 0.015
+                    }
+                  }
+                ]
+              }
+              Transform {
+                translation -0.12 0.0225 0.0575
+                children [
+                  Shape {
+                    appearance USE Holder_App
+                    geometry Box {
+                      size 0.045 0.015 0.015
+                    }
+                  }
+                ]
+              }
+              Transform {
+                translation -0.045 0 0.0575
+                children [
+                  Shape {
+                    appearance USE Holder_App
+                    geometry Box {
+                      size 0.105 0.06 0.015
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+        name "solid(2)"
+        boundingObject USE Holder
+        physics Physics {
+        }
+      }
+    }
+  ]
+  contactMaterial "Smooth"
+  boundingObject USE Body
+  physics DEF Physics_Body Physics {
+  }
+}
+}
