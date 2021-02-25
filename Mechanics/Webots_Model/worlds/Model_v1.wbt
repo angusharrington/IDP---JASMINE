@@ -12,8 +12,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation 0.07189532254155469 -0.9877940786592401 -0.13818075395071766 3.90480755352678
-  position 0.9920470925955869 0.5057013474784198 -1.0467876861732834
+  orientation -0.04361357644604519 0.9980371093792019 0.044942009874860314 1.6027602031733865
+  position 0.36294001395013353 0.05989422714460793 0.019693472662632137
 }
 TexturedBackground {
 }
@@ -23,7 +23,221 @@ RectangleArena {
   contactMaterial "Floor"
   floorTileSize 0.2 0.2
 }
-JASMINE2 {
-  hidden rotation_4 -0.9774890368449334 -1.4597221265003435e-07 0.2109862148291761 1.515705215537421e-05
+Robot {
   translation 0 0.06 0
+  children [
+    GPS {
+    }
+    DEF Body Group {
+      children [
+        Transform {
+          translation -0.06 -0.03 0
+          children [
+            DEF Ball Shape {
+              appearance PBRAppearance {
+                metalness 0
+              }
+              geometry Sphere {
+                radius 0.02
+                subdivision 2
+              }
+            }
+          ]
+        }
+        DEF Box Shape {
+          appearance DEF Body_App PBRAppearance {
+            baseColor 1 0 0
+            metalness 0
+          }
+          geometry Box {
+            size 0.2 0.06 0.1
+          }
+        }
+      ]
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        position 2.5253684986159427e-09
+        axis 0 0 -1
+        anchor 0.05 -0.02 0.06
+      }
+      device [
+        DEF Wheel1 RotationalMotor {
+          name "RightWheelMotor"
+          maxVelocity 100
+        }
+      ]
+      endPoint Solid {
+        translation 0.05 -0.02 0.06
+        rotation 1 1.5414406829461546e-09 1.5414406854557855e-09 1.5707963251667885
+        children [
+          DEF Wheel Shape {
+            appearance PBRAppearance {
+              baseColor 0 0 1
+              metalness 0
+            }
+            geometry Cylinder {
+              height 0.02
+              radius 0.035
+            }
+          }
+        ]
+        contactMaterial "Wheel"
+        boundingObject USE Wheel
+        physics DEF Physics_Wheel Physics {
+        }
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        position 2.525400603234157e-09
+        axis 0 0 -1
+        anchor 0.05 -0.02 -0.06
+      }
+      device [
+        DEF Wheel2 RotationalMotor {
+          name "LeftWheelMotor"
+          maxVelocity 100
+        }
+      ]
+      endPoint Solid {
+        translation 0.05 -0.02 -0.06
+        rotation 1 1.5408048287137514e-09 1.5408048980217043e-09 1.5707962818132422
+        children [
+          USE Wheel
+        ]
+        name "solid(1)"
+        contactMaterial "Wheel"
+        boundingObject USE Wheel
+        physics USE Physics_Wheel
+      }
+    }
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        position -1.8326478135820424e-07
+        axis 0 0 1
+        anchor 0.09 0.025 0
+      }
+      device [
+        RotationalMotor {
+          name "ClawMotor"
+        }
+      ]
+      endPoint Solid {
+        translation 0.22499999999999953 3.3549400011920194e-07 1.1782299999999944e-08
+        rotation -0.9774890300028356 -1.4597221162827756e-07 0.21098624652828513 1.5157140052661421e-05
+        children [
+          LightSensor {
+            translation 0.007 -0.02 0.002
+            children [
+              Shape {
+                appearance PBRAppearance {
+                }
+                geometry Box {
+                  size 0.0018 0.0041 0.0034
+                }
+              }
+            ]
+            name "light sensor left"
+          }
+          LightSensor {
+            translation 0.007 -0.02 -0.002
+            children [
+              Shape {
+                appearance PBRAppearance {
+                }
+                geometry Box {
+                  size 0.0018 0.0041 0.0034
+                }
+              }
+            ]
+            name "light sensor right"
+          }
+          DistanceSensor {
+            translation 0.001 -0.01 0
+            rotation 0 1 0 4.07987e-06
+            children [
+              Shape {
+                appearance PBRAppearance {
+                  baseColor 0 1 1
+                  metalness 0
+                }
+                geometry Box {
+                  size 0.014 0.014 0.03
+                }
+              }
+            ]
+            name "DistanceSensorFront"
+          }
+          DEF Holder Group {
+            children [
+              Shape {
+                appearance DEF Holder_App PBRAppearance {
+                  baseColor 1 0 1
+                  metalness 0
+                }
+                geometry Box {
+                  size 0.015 0.06 0.1
+                }
+              }
+              Transform {
+                translation -0.045 0 -0.0575
+                children [
+                  Shape {
+                    appearance USE Holder_App
+                    geometry Box {
+                      size 0.105 0.06 0.015
+                    }
+                  }
+                ]
+              }
+              Transform {
+                translation -0.12 0.0225 -0.0575
+                children [
+                  Shape {
+                    appearance USE Holder_App
+                    geometry Box {
+                      size 0.045 0.015 0.015
+                    }
+                  }
+                ]
+              }
+              Transform {
+                translation -0.12 0.0225 0.0575
+                children [
+                  Shape {
+                    appearance USE Holder_App
+                    geometry Box {
+                      size 0.045 0.015 0.015
+                    }
+                  }
+                ]
+              }
+              Transform {
+                translation -0.045 0 0.0575
+                children [
+                  Shape {
+                    appearance USE Holder_App
+                    geometry Box {
+                      size 0.105 0.06 0.015
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+        name "solid(2)"
+        boundingObject USE Holder
+        physics Physics {
+        }
+      }
+    }
+  ]
+  name "robot(1)"
+  contactMaterial "Smooth"
+  boundingObject USE Body
+  physics DEF Physics_Body Physics {
+  }
+  controller "JASMINE_controller"
 }
