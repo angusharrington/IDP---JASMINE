@@ -1,8 +1,7 @@
-PROTO JASMINE2 [
+PROTO JASMINE [
   field SFVec3f    translation  0 0 0
   field SFRotation rotation     0 1 0 0
- #field SFFloat    bodyMass     1
-  field SFString   controller   "JASMINE_controller"
+  field SFFloat    bodyMass     1
 ]
 {
 	Robot {
@@ -107,39 +106,37 @@ PROTO JASMINE2 [
         }
       ]
       endPoint Solid {
-        translation 0.22499999999999967 3.3549400008450747e-07 1.1782299999999961e-08
-        rotation -0.9774890414691595 -1.459722133405878e-07 0.21098619340535701 1.5156993556899551e-05
+        translation 0.22499999999999953 3.3549400011920194e-07 1.1782299999999944e-08
+        rotation -0.9774890300028356 -1.4597221162827756e-07 0.21098624652828513 1.5157140052661421e-05
         children [
-          DistanceSensor {
-            translation 0.01 0 0.0419063
-            rotation 0 1 0 4.07987e-06
+          LightSensor {
+            translation 0.007 -0.02 0.002
             children [
               Shape {
                 appearance PBRAppearance {
-                  baseColor 0 1 1
-                  metalness 0
                 }
                 geometry Box {
-                  size 0.005 0.01 0.02
+                  size 0.0018 0.0041 0.0034
                 }
               }
             ]
-            name "DistanceSensorFrontRight"
+            name "light sensor left"
           }
           LightSensor {
-            translation 0.01 0 0
+            translation 0.007 -0.02 -0.002
             children [
               Shape {
                 appearance PBRAppearance {
                 }
                 geometry Box {
-                  size 0.005 0.01 0.02
+                  size 0.0018 0.0041 0.0034
                 }
               }
             ]
+            name "light sensor right"
           }
           DistanceSensor {
-            translation 0.01 0 -0.0399997
+            translation 0.001 -0.01 0
             rotation 0 1 0 4.07987e-06
             children [
               Shape {
@@ -148,11 +145,11 @@ PROTO JASMINE2 [
                   metalness 0
                 }
                 geometry Box {
-                  size 0.005 0.01 0.02
+                  size 0.014 0.014 0.03
                 }
               }
             ]
-            name "DistanceSensorFrontLeft"
+            name "DistanceSensorFront"
           }
           DEF Holder Group {
             children [
@@ -224,6 +221,6 @@ PROTO JASMINE2 [
   boundingObject USE Body
   physics DEF Physics_Body Physics {
   }
-  controller IS controller
+  controller "JASMINE_controller"
 }
 }
