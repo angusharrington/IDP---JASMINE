@@ -39,7 +39,7 @@ PROTO JASMINE [
     }
     HingeJoint {
       jointParameters HingeJointParameters {
-        position 2.5253684986159427e-09
+        position -1.962532794615476e-08
         axis 0 0 -1
         anchor 0.05 -0.02 0.06
       }
@@ -51,7 +51,7 @@ PROTO JASMINE [
       ]
       endPoint Solid {
         translation 0.05 -0.02 0.06
-        rotation 1 1.5414406829461546e-09 1.5414406854557855e-09 1.5707963251667885
+        rotation 0.9999999999999998 1.2616788945821586e-08 1.2616790881451197e-08 1.5707963251667951
         children [
           DEF Wheel Shape {
             appearance PBRAppearance {
@@ -72,7 +72,7 @@ PROTO JASMINE [
     }
     HingeJoint {
       jointParameters HingeJointParameters {
-        position 2.525400603234157e-09
+        position -1.96250838174491e-08
         axis 0 0 -1
         anchor 0.05 -0.02 -0.06
       }
@@ -84,7 +84,7 @@ PROTO JASMINE [
       ]
       endPoint Solid {
         translation 0.05 -0.02 -0.06
-        rotation 1 1.5408048287137514e-09 1.5408048980217043e-09 1.5707962818132422
+        rotation 0.9999999999999998 1.2616096011207397e-08 1.2616119626379814e-08 1.5707962818137284
         children [
           USE Wheel
         ]
@@ -96,7 +96,7 @@ PROTO JASMINE [
     }
     HingeJoint {
       jointParameters HingeJointParameters {
-        position -1.8326478135820424e-07
+        position -3.4233833876488007e-06
         axis 0 0 1
         anchor 0.09 0.025 0
       }
@@ -106,11 +106,12 @@ PROTO JASMINE [
         }
       ]
       endPoint Solid {
-        translation 0.22499999999999953 3.3549400011920194e-07 1.1782299999999944e-08
-        rotation -0.9774890300028356 -1.4597221162827756e-07 0.21098624652828513 1.5157140052661421e-05
+        translation 0.2249998147091022 -2.4480611006579e-06 1.1782301467810914e-08
+        rotation -0.9999959715061943 1.731428891938542e-05 -0.0028384276629862273 1.4813583028974224e-05
         children [
-          LightSensor {
-            translation 0.007 -0.02 0.002
+          Camera {
+            translation 0.007 0 0.002
+            rotation 0 1 0 -1.5707996938995747
             children [
               Shape {
                 appearance PBRAppearance {
@@ -120,10 +121,14 @@ PROTO JASMINE [
                 }
               }
             ]
-            name "light sensor left"
+            name "lightSensorRED"
+            width 10
+            height 10
+            far 0.1
           }
-          LightSensor {
-            translation 0.007 -0.02 -0.002
+          Camera {
+            translation 0.007 0 -0.002
+            rotation 0 1 0 -1.5707996938995747
             children [
               Shape {
                 appearance PBRAppearance {
@@ -133,7 +138,7 @@ PROTO JASMINE [
                 }
               }
             ]
-            name "light sensor right"
+            name "lightSensorGREEN"
           }
           DistanceSensor {
             translation 0.001 -0.01 0
@@ -150,6 +155,24 @@ PROTO JASMINE [
               }
             ]
             name "DistanceSensorFront"
+            lookupTable [
+              0 0 0
+              0.04 2.5 0
+              0.05 3 0
+              0.055 3.1 0
+              0.06 3 0
+              0.09 2.5 0
+              0.1 2.25 0
+              0.15 1.65 0
+              0.2 1.3 0
+              0.25 1.05 0
+              0.3 0.95 0
+              0.4 0.725 0
+              0.5 0.6 0
+              0.6 0.55 0
+              0.7 0.45 0
+              0.8 0.4 0
+            ]
           }
           DEF Holder Group {
             children [
@@ -213,6 +236,9 @@ PROTO JASMINE [
         boundingObject USE Holder
         physics Physics {
         }
+        recognitionColors [
+          0 0 0
+        ]
       }
     }
   ]
