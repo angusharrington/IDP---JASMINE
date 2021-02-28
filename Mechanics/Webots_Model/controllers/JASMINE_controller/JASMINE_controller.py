@@ -50,6 +50,9 @@ class Jasmine(Robot):
         self.clawMotor.setPosition( -0.1 )
 
 
+    def updatePositionAndVelocity(self):
+        pass
+
     @property
     def position(self):
         
