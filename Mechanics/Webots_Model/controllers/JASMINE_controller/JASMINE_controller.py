@@ -20,7 +20,9 @@ class Jasmine(Robot):
         self.initialiseSensors()
 
         # variables that help the robot work
-        self.prevPos      = self.position
+        self.pos          = np.zeros( 3 )
+        self.vel          = np.zeros( 3 )
+        self.posHist      = np.zeros( (10, 3) )
         self.clawAngle    = -0.1
         self.gettingBlock = False
         self.haveBlock    = False
@@ -32,7 +34,7 @@ class Jasmine(Robot):
     def initialiseSensors(self):
 
         # get all the robot's sensors
-        self.gps             = GPS("gps")
+        self.gps             = GPS( "gps" )
         self.leftWheelMotor  = self.getDevice( "LeftWheelMotor"      )
         self.rightWheelMotor = self.getDevice( "RightWheelMotor"     )
         self.clawMotor       = self.getDevice( "ClawMotor"           )
@@ -51,12 +53,16 @@ class Jasmine(Robot):
 
 
     def updatePositionAndVelocity(self):
-        pass
 
-    @property
-    def position(self):
-        
-        return np.array( self.gps.getValues() )
+        # set the current position to the value of the gps (as a numpy array)
+        self.pos = np.array( self.gps.getValues() )
+
+        # roll the position history array up 1 spot and assign the current position to the last vector in the array
+        self.posHist = np.roll( self.posHist, -1, axis=0 )
+        self.posHist[-1] = self.pos
+
+        # set the velocity using the last 2 positions in the position history array
+        self.vel = ( self.posHist[-1] - self.posHist[-2] ) / ( self.timestep / 1000 )
 
 
     def mainLoop(self):
@@ -64,16 +70,10 @@ class Jasmine(Robot):
         # loop until simulation end
         while self.step( self.timestep ) != -1:
 
-            # get the position from the gps
-            x, y, z = pos = self.position
-            dt = self.timestep / 1000
-
-            # calculate velocity with single sided difference approximation
-            vel = [ (a-b)/dt for a,b in zip(pos, self.prevPos) ]
-            self.prevPos = pos
+            self.updatePositionAndVelocity()
 
             # can print gps position or velocity
-            print( "pos: " + " ".join( ["%.2f" % v for v in pos] ) )
-            print( "vel: " + " ".join( ["%.2f" % v for v in vel] ) )
+            print( "pos: " + " ".join( ["%.2f" % v for v in self.pos] ) )
+            print( "vel: " + " ".join( ["%.2f" % v for v in self.vel] ) )
 
 Jasmine()
