@@ -10,6 +10,9 @@ from controller import Robot, Motor, DistanceSensor, GPS
 # norm(v) returns v scaled to unit length
 norm = lambda v : v / np.linalg.norm(v)
 
+# calculate actual distance from the sensor reading
+distanceFromReading = lambda x : math.log( 1 / (2*x), 0.5 )
+
 # Jasmine class inherits from Robot class
 # so we can use eg self.step instead of robot.step
 class Jasmine(Robot):
@@ -38,8 +41,8 @@ class Jasmine(Robot):
         self.x, self.y, self.z = self.pos
 
         # some functions to help set wheel speeds
-        self.stop = lambda : self.setWheelSpeeds(  0.0, 0.0 )
-        self.spin = lambda : self.setWheelSpeeds( -5.0, 5.0 )
+        self.stop = lambda : self.setWheelSpeeds( 0.0, 0.0 )
+        self.spin = lambda : self.setWheelSpeeds( 1.0, 5.0 )
 
         # enter the main loop
         self.mainLoop()
@@ -63,6 +66,28 @@ class Jasmine(Robot):
         self.rightWheelMotor.setPosition( float('inf') )
 
 
+    def schedule(self, delay, func):
+
+        # call func after delay millisceonds
+
+        # add a tuple to the schedule containing the time at which
+        # to call (in milliseconds) and the function to call
+        self.scheduleTuples.append( ( self.simTime + delay, func ) )
+
+
+    def runSchedule(self):
+
+        # loop over scheduleTuples and run the ones whose time has been reached
+        for time, func in self.scheduleTuples:
+
+            # skip if the tuple's time has not been reached
+            if self.simTime < time: continue
+
+            # run function and remove the tuple from the list
+            func()
+            self.scheduleTuples.remove( (time, func) )
+
+
     def updatePositionAndVelocity(self):
 
         # set the current position to the value of the gps (as a numpy array)
@@ -83,10 +108,13 @@ class Jasmine(Robot):
     def updateDistance(self):
 
         # add the distances sensor reading to the distances list
-        self.distances.append( self.distanceSensor.getValue() )
+        self.distances.append( distanceFromReading( self.distanceSensor.getValue() ) )
 
-        if self.distances[-1] - self.distances[-2] > 0.4:
-            print( "found block" )
+        if self.distances[-1] - self.distances[-2] > 0.1:
+
+            blockPos = self.box_detection( self.distances[-1] )
+
+            print( f"{self.simTime}: found block at {blockPos}" )
 
 
     def setWheelSpeeds(self, leftSpeed, rightSpeed):
@@ -110,12 +138,24 @@ class Jasmine(Robot):
         self.rightWheelMotor.setVelocity( 18.0 - shouldTurn * 10 )
 
 
+    def box_detection(self, distanceSensed):
+
+        sensor_dist  = 0.1
+        sensorRange = 0.8
+        object_position = norm( self.vel ) * (distanceSensed + sensor_dist) + self.pos
+        
+        if object_position[0] < 1.16 and object_position[1] < 1.16 and distanceSensed < sensorRange:
+            return object_position
+        else:
+            return False
+
+
     def mainLoop(self):
 
         # start a spin and stop after 2.55 seconds - equal to 1 revolution
-        #self.spin()
-        #self.schedule( 2550, self.stop )
-        self.schedule( 10000, self.plotDists )
+        self.spin()
+        self.schedule( 2550, self.stop )
+        self.schedule( 2600, self.plotDists )
 
         # loop until simulation end
         while self.step( self.timestep ) != -1:
@@ -125,33 +165,11 @@ class Jasmine(Robot):
             self.updatePositionAndVelocity()
             self.updateDistance()
             self.runSchedule()
-            self.wander()
+            #self.wander()
 
             # can print position and velocity
             # print( "pos: " + " ".join( ["%.2f" % v for v in self.pos] ) )
             # print( "vel: " + " ".join( ["%.2f" % v for v in self.vel] ) )
-
-
-    def schedule(self, delay, func):
-
-        # call func after delay millisceonds
-
-        # add a tuple to the schedule containing the time at which
-        # to call (in milliseconds) and the function to call
-        self.scheduleTuples.append( ( self.simTime + delay, func ) )
-
-
-    def runSchedule(self):
-
-        # loop over scheduleTuples and run the ones whose time has come
-        for time, func in self.scheduleTuples:
-
-            # skip if the tuple's time has not been reached
-            if self.simTime < time: continue
-
-            # run function and remove the tuple from the list
-            func()
-            self.scheduleTuples.remove( (time, func) )
 
 
     def plotDists(self):
