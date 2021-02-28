@@ -2,8 +2,9 @@
 # idp group L203
 # Johns Automated Sorter for Meaningless Inconsequential Non-existent Experiments
 
-import math, threading
+import math
 import numpy as np
+import matplotlib.pyplot as plt
 from controller import Robot, Motor, DistanceSensor, GPS
 
 # norm(v) returns v scaled to unit length
@@ -23,12 +24,15 @@ class Jasmine(Robot):
         self.initialiseSensors()
 
         # variables that help the robot work
-        self.pos          = np.zeros( 3 )
-        self.vel          = np.zeros( 3 )
-        self.posHist      = np.zeros( (10, 3) ) # stores last 10 positions of robot - maybe unneccesary
-        self.clawAngle    = -0.1
-        self.gettingBlock = False
-        self.haveBlock    = False
+        self.pos            = np.zeros( 3 )
+        self.vel            = np.zeros( 3 )
+        self.posHist        = np.zeros( (10, 3) ) # stores last 10 positions of robot - maybe unneccesary
+        self.distances      = [0, 0, 0]
+        self.clawAngle      = 0.0
+        self.gettingBlock   = False
+        self.haveBlock      = False
+        self.simTime        = self.timestep
+        self.scheduleTuples = []
 
         # x, y and z coords for convenience
         self.x, self.y, self.z = self.pos
@@ -58,9 +62,6 @@ class Jasmine(Robot):
         self.leftWheelMotor.setPosition(  float('inf') )
         self.rightWheelMotor.setPosition( float('inf') )
 
-        # claw is using position control but needs to be a bit down so we can see the blocks
-        self.clawMotor.setPosition( -0.1 )
-
 
     def updatePositionAndVelocity(self):
 
@@ -77,6 +78,15 @@ class Jasmine(Robot):
         # set the velocity using the last 2 positions in the position history array
         # could use last 3 positions to get O(x^2) error
         self.vel = ( self.posHist[-1] - self.posHist[-2] ) / ( self.timestep / 1000 )
+
+
+    def updateDistance(self):
+
+        # add the distances sensor reading to the distances list
+        self.distances.append( self.distanceSensor.getValue() )
+
+        if self.distances[-1] - self.distances[-2] > 0.4:
+            print( "found block" )
 
 
     def setWheelSpeeds(self, leftSpeed, rightSpeed):
@@ -97,22 +107,57 @@ class Jasmine(Robot):
 
         # set motors to turn if neccesary
         self.leftWheelMotor.setVelocity(  20.0 )
-        self.rightWheelMotor.setVelocity( 18.0 - shouldTurn * 15 )
+        self.rightWheelMotor.setVelocity( 18.0 - shouldTurn * 10 )
 
 
     def mainLoop(self):
 
-        # start a spin and stop after 2.7 seconds - equal to 1 revolution
-        self.spin()
-        threading.Timer( 2.7, self.stop ).start()
+        # start a spin and stop after 2.55 seconds - equal to 1 revolution
+        #self.spin()
+        #self.schedule( 2550, self.stop )
+        self.schedule( 10000, self.plotDists )
 
         # loop until simulation end
         while self.step( self.timestep ) != -1:
 
+            self.simTime += self.timestep
+
             self.updatePositionAndVelocity()
+            self.updateDistance()
+            self.runSchedule()
+            self.wander()
 
             # can print position and velocity
             # print( "pos: " + " ".join( ["%.2f" % v for v in self.pos] ) )
             # print( "vel: " + " ".join( ["%.2f" % v for v in self.vel] ) )
+
+
+    def schedule(self, delay, func):
+
+        # call func after delay millisceonds
+
+        # add a tuple to the schedule containing the time at which
+        # to call (in milliseconds) and the function to call
+        self.scheduleTuples.append( ( self.simTime + delay, func ) )
+
+
+    def runSchedule(self):
+
+        # loop over scheduleTuples and run the ones whose time has come
+        for time, func in self.scheduleTuples:
+
+            # skip if the tuple's time has not been reached
+            if self.simTime < time: continue
+
+            # run function and remove the tuple from the list
+            func()
+            self.scheduleTuples.remove( (time, func) )
+
+
+    def plotDists(self):
+
+        plt.plot( self.distances )
+        plt.show()
+
 
 Jasmine()
