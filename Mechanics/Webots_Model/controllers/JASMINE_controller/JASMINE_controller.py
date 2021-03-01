@@ -7,11 +7,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from controller import Robot, Motor, DistanceSensor, GPS
 
+
 # norm(v) returns v scaled to unit length
 norm = lambda v : v / np.linalg.norm(v)
 
 # calculate actual distance from the sensor reading
-distanceFromReading = lambda x : math.log( 1 / (2*x), 0.5 )
+distanceFromReading = lambda x : (0.32 / x) ** (5/6) - 0.1
+
 
 # Jasmine class inherits from Robot class
 # so we can use eg self.step instead of robot.step
@@ -42,7 +44,7 @@ class Jasmine(Robot):
 
         # some functions to help set wheel speeds
         self.stop = lambda : self.setWheelSpeeds( 0.0, 0.0 )
-        self.spin = lambda : self.setWheelSpeeds( 1.0, 5.0 )
+        self.spin = lambda : self.setWheelSpeeds( 1.5, 3.0 )
 
         # enter the main loop
         self.mainLoop()
@@ -62,8 +64,11 @@ class Jasmine(Robot):
         self.distanceSensor.enable( self.timestep )
 
         # set the motors' positions to infinity so we can use velocity control
-        self.leftWheelMotor.setPosition(  float('inf') )
-        self.rightWheelMotor.setPosition( float('inf') )
+        self.leftWheelMotor.setPosition(  float("inf") )
+        self.rightWheelMotor.setPosition( float("inf") )
+
+        # start with motors at 0 velocity
+        self.setWheelSpeeds( 0.0, 0.0 )
 
 
     def schedule(self, delay, func):
@@ -110,10 +115,11 @@ class Jasmine(Robot):
         # add the distances sensor reading to the distances list
         self.distances.append( distanceFromReading( self.distanceSensor.getValue() ) )
 
-        if self.distances[-1] - self.distances[-2] > 0.1:
+        # if we detect a step change in distance measured by the sensor then a block is in front
+        if self.distances[-2] - self.distances[-1] > 0.1:
 
+            # calculae and print the block position
             blockPos = self.box_detection( self.distances[-1] )
-
             print( f"{self.simTime}: found block at {blockPos}" )
 
 
@@ -134,14 +140,14 @@ class Jasmine(Robot):
         shouldTurn       = nearWall and goingTowardsWall
 
         # set motors to turn if neccesary
-        self.leftWheelMotor.setVelocity(  20.0 )
-        self.rightWheelMotor.setVelocity( 18.0 - shouldTurn * 10 )
+        self.leftWheelMotor.setVelocity(  15.0 )
+        self.rightWheelMotor.setVelocity( 14.0 - shouldTurn * 10 )
 
 
     def box_detection(self, distanceSensed):
 
-        sensor_dist  = 0.1
-        sensorRange = 0.8
+        sensor_dist  = 0.232
+        sensorRange  = 0.8
         object_position = norm( self.vel ) * (distanceSensed + sensor_dist) + self.pos
         
         if object_position[0] < 1.16 and object_position[1] < 1.16 and distanceSensed < sensorRange:
@@ -153,9 +159,9 @@ class Jasmine(Robot):
     def mainLoop(self):
 
         # start a spin and stop after 2.55 seconds - equal to 1 revolution
-        self.spin()
-        self.schedule( 2550, self.stop )
-        self.schedule( 2600, self.plotDists )
+        # self.spin()
+        # self.schedule( 5000, self.stop )
+        # self.schedule( 6000, self.plotDists )
 
         # loop until simulation end
         while self.step( self.timestep ) != -1:
@@ -165,7 +171,7 @@ class Jasmine(Robot):
             self.updatePositionAndVelocity()
             self.updateDistance()
             self.runSchedule()
-            #self.wander()
+            self.wander()
 
             # can print position and velocity
             # print( "pos: " + " ".join( ["%.2f" % v for v in self.pos] ) )
