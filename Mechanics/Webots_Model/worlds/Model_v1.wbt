@@ -12,8 +12,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation -0.04361357644604519 0.9980371093792019 0.044942009874860314 1.6027602031733865
-  position 0.36294001395013353 0.05989422714460793 0.019693472662632137
+  orientation -0.752209744582965 -0.6236434623198179 -0.21271890386183465 0.8018949709431734
+  position -0.25341791922612217 0.46942855831555136 0.5813788631610797
 }
 TexturedBackground {
 }
@@ -24,7 +24,7 @@ RectangleArena {
   floorTileSize 0.2 0.2
 }
 Robot {
-  translation 0 0.06 0
+  translation 0 0.12 0
   children [
     GPS {
     }
@@ -68,8 +68,8 @@ Robot {
         }
       ]
       endPoint Solid {
-        translation 0.05 -0.02 0.06
-        rotation 1 1.5414406829461546e-09 1.5414406854557855e-09 1.5707963251667885
+        translation 0.050236433751432594 -0.02013847202816315 0.06029079645146594
+        rotation 0.9781056539555855 0.15526188894798448 0.13857516206167736 1.5776131286985284
         children [
           DEF Wheel Shape {
             appearance PBRAppearance {
@@ -101,8 +101,8 @@ Robot {
         }
       ]
       endPoint Solid {
-        translation 0.05 -0.02 -0.06
-        rotation 1 1.5408048287137514e-09 1.5408048980217043e-09 1.5707962818132422
+        translation 0.05010010066489293 -0.019743767119615983 -0.06028681898865934
+        rotation 0.9681992927225499 0.16828191005618295 0.1851251693298267 1.5845924886457197
         children [
           USE Wheel
         ]
@@ -124,8 +124,8 @@ Robot {
         }
       ]
       endPoint Solid {
-        translation 0.22499999999999953 3.3549400011920194e-07 1.1782299999999944e-08
-        rotation -0.9774890300028356 -1.4597221162827756e-07 0.21098624652828513 1.5157140052661421e-05
+        translation 0.22592290966235515 -5.020247630986227e-05 1.0510479863307108e-05
+        rotation -0.9381703480922411 -0.11796676375733871 0.3254538993607293 1.4421244954725775e-05
         children [
           LightSensor {
             translation 0.007 -0.02 0.002
@@ -238,6 +238,7 @@ Robot {
   contactMaterial "Smooth"
   boundingObject USE Body
   physics DEF Physics_Body Physics {
+    mass 0.8
   }
   controller "JASMINE_controller"
 }
