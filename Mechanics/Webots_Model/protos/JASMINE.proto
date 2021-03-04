@@ -1,7 +1,7 @@
 PROTO JASMINE [
   field SFVec3f    translation  0 0 0
   field SFRotation rotation     0 1 0 0
-  field SFFloat    bodyMass     1
+  field SFFloat    bodyMass     0.8
 ]
 {
 Robot {
