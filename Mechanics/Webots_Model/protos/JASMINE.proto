@@ -23,9 +23,9 @@ Robot {
       name "lightSensorGREEN"
       lookupTable [
         0 0 0
-        1.01673 0 0
-        1.02673 1 0
-        3.7 1 0
+        0.333333 0 0
+        0.336 1 0
+        3 1 0
       ]
       colorFilter 0 1 0
     }
@@ -44,9 +44,9 @@ Robot {
       name "lightSensorRED"
       lookupTable [
         0 0 0
-        1.01673 0 0
-        1.02673 1 0
-        3.7 1 0
+        0.333333 0 0
+        0.336 1 0
+        3 1 0
       ]
       colorFilter 1 0 0
     }
