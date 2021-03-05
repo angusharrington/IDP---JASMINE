@@ -20,7 +20,14 @@ Robot {
           }
         }
       ]
-      name "light sensor right"
+      name "lightSensorGREEN"
+      lookupTable [
+        0 0 0
+        1.01673 0 0
+        1.02673 1 0
+        3.7 1 0
+      ]
+      colorFilter 0 1 0
     }
     LightSensor {
       translation 0.17 0.02 0.002
@@ -34,7 +41,14 @@ Robot {
           }
         }
       ]
-      name "light sensor left"
+      name "lightSensorRED"
+      lookupTable [
+        0 0 0
+        1.01673 0 0
+        1.02673 1 0
+        3.7 1 0
+      ]
+      colorFilter 1 0 0
     }
     GPS {
     }
