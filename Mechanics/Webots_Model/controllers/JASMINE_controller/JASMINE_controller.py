@@ -37,6 +37,8 @@ class Jasmine(Robot):
         self.simTime        = self.timestep
         self.scheduleTuples = []
         self.behaviour      = self.wander
+        self.obj_pos        = np.zeros( 3 )
+        self.boc_loc        = np.zeros( 3 )
 
         # x, y and z coords for convenience
         self.x, self.y, self.z = self.pos
@@ -130,25 +132,20 @@ class Jasmine(Robot):
         self.distances[-1] = self.getDistance()
 
 
-    def box_detection(self):
 
+    def update_obj_pos(self):
+       
         sensor_dist  = 0.232
-        sensorRange  = 0.8
-        object_position = norm( self.vel ) * (self.distances[-1] + sensor_dist) + self.pos
-        
-        if abs(object_position[0]) < 1.15 and abs(object_position[2]) < 1.15 and self.distances[-1] < sensorRange:
-            print(object_position)
-            return object_position
-        else:
-            return False
+
+        self.obj_pos = (norm( self.vel ) * (self.distances[-1] + sensor_dist) + self.pos)
+
 
 
     def checkForBox(self):
-
+        
         print( self.distances[-1])
-
         # if we detect a step change in the distance sensor's measurement then assume a box was detected
-        return self.distances[-2] != 0 and not -0.2 < self.distances[-1] - self.distances[-2] < 0.2
+        return self.distances[-2] != 0 and abs(self.obj_pos[0]) < 1.15 and abs(self.obj_pos[1]) < 1.15 and not -0.2 < self.distances[-1] - self.distances[-2] < 0.2
 
 
     # --- Behaviours ---
@@ -160,6 +157,7 @@ class Jasmine(Robot):
 
         # if we see a box in front of us, start the goToBox behaviour
         if self.checkForBox():
+            self.box_loc = self.obj_pos
             self.behaviour = self.goToBox
 
         # decide if we are about to hit a wall
@@ -174,11 +172,20 @@ class Jasmine(Robot):
     def goToBox(self):
 
         # if we are close to the box then stop
-        if self.distances[-1] < 0.15:
+        if np.linalg.norm(self.box_loc - self.pos) < 0.5:
             self.behaviour = self.stop
+            
+        toSquare = self.box_loc - self.pos
+        print('hello', np.linalg.norm(self.box_loc - self.pos))
 
-        # just go forward, towards the box
-        self.setWheelSpeeds( 7.0, 7.0 )
+        # decide if we should turn
+        shouldTurn = np.dot( norm(toSquare), norm(self.vel )) < 0.9
+
+        # turn to point at the square and drive
+
+        self.setWheelSpeeds(  7.0 - shouldTurn * 11 , 7.0 - shouldTurn * 17 )
+
+
 
 
 
@@ -199,6 +206,7 @@ class Jasmine(Robot):
             ## update the time, distance sensor reading and scheduled tasks
             self.updatePositionAndVelocity()
             self.updateDistance()
+            self.update_obj_pos()
             self.runSchedule()
 
             # call the current behaviour function
