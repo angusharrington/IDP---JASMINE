@@ -5,6 +5,7 @@
 import math
 import numpy as np
 from controller import Robot, Motor, DistanceSensor, GPS
+import time
 
 
 # norm(v) returns v scaled to unit length
@@ -39,6 +40,8 @@ class Jasmine(Robot):
         self.behaviour      = self.wander
         self.obj_pos        = np.zeros( 3 )
         self.boc_loc        = np.zeros( 3 )
+        self.greenLevel     = 0.0
+        self.redLevel       = 0.0
 
         # x, y and z coords for convenience
         self.x, self.y, self.z = self.pos
@@ -63,14 +66,21 @@ class Jasmine(Robot):
         self.rightWheelMotor = self.getDevice( "RightWheelMotor"     )
         self.clawMotor       = self.getDevice( "ClawMotor"           )
         self.distanceSensor  = self.getDevice( "DistanceSensorFront" )
+        self.greenSensor     = self.getDevice( "lightSensorGREEN"    )
+        self.redSensor       = self.getDevice( "lightSensorRED"      )
 
         # enable the sensors
         self.gps.enable( self.timestep )
         self.distanceSensor.enable( self.timestep )
+        self.greenSensor.enable( self.timestep )
+        self.redSensor.enable( self.timestep )
+        
 
         # set the motors' positions to infinity so we can use velocity control
         self.leftWheelMotor.setPosition(  float("inf") )
         self.rightWheelMotor.setPosition( float("inf") )
+        
+        self.clawMotor.setPosition( 0 )
 
         # start with motors at 0 velocity
         self.setWheelSpeeds( 0.0, 0.0 )
@@ -81,8 +91,10 @@ class Jasmine(Robot):
         # set the two wheel speeds
         self.leftWheelMotor.setVelocity(  leftSpeed  )
         self.rightWheelMotor.setVelocity( rightSpeed )
-
-
+        
+    def setClawMotor(self, clawAngle):
+        
+        self.clawMotor.setPosition( clawAngle )
 
     def schedule(self, delay, func):
 
@@ -107,7 +119,10 @@ class Jasmine(Robot):
             func()
             self.scheduleTuples.remove( (time, func) )
 
-
+    def updateColourSensors(self):
+    
+        self.greenLevel = self.greenSensor.getValue() 
+        self.redLevel   = self.redSensor.getValue() 
 
     def updatePositionAndVelocity(self):
 
@@ -133,7 +148,7 @@ class Jasmine(Robot):
 
 
 
-    def update_obj_pos(self):
+    def updateObjPos(self):
        
         sensor_dist  = 0.232
 
@@ -143,7 +158,6 @@ class Jasmine(Robot):
 
     def checkForBox(self):
         
-        print( self.distances[-1])
         # if we detect a step change in the distance sensor's measurement then assume a box was detected
         return self.distances[-2] != 0 and abs(self.obj_pos[0]) < 1.15 and abs(self.obj_pos[1]) < 1.15 and not -0.2 < self.distances[-1] - self.distances[-2] < 0.2
 
@@ -166,33 +180,34 @@ class Jasmine(Robot):
         shouldTurn       = nearWall and goingTowardsWall
 
         # set motors to turn to avoid the wall
-        self.setWheelSpeeds( 15.0, 14.0 - shouldTurn * 10 )
+        self.setWheelSpeeds( 8.0, 8.0 - shouldTurn * 7.0 )
 
 
     def goToBox(self):
 
         # if we are close to the box then stop
-        if np.linalg.norm(self.box_loc - self.pos) < 0.5:
-            self.behaviour = self.stop
+        if np.linalg.norm(self.box_loc - self.pos) < 0.26:
+            self.behaviour = self.checkBox
             
-        toSquare = self.box_loc - self.pos
         print('hello', np.linalg.norm(self.box_loc - self.pos))
-
-        # decide if we should turn
-        shouldTurn = np.dot( norm(toSquare), norm(self.vel )) < 0.9
-
-        # turn to point at the square and drive
-
-        self.setWheelSpeeds(  7.0 - shouldTurn * 11 , 7.0 - shouldTurn * 17 )
+        self.setClawMotor( 1.8 )
+        
+        self.setWheelSpeeds(3.0, 3.0)
 
 
 
 
 
-    def stop(self):
+
+    def checkBox(self):
 
         # stop the robot
         self.setWheelSpeeds( 0.0, 0.0 )
+        self.setClawMotor(0)
+
+        print(self.greenSensor.getValue())
+        
+        
 
 
 
@@ -204,10 +219,12 @@ class Jasmine(Robot):
             self.simTime += self.timestep
 
             ## update the time, distance sensor reading and scheduled tasks
+            self.updateColourSensors()            
             self.updatePositionAndVelocity()
             self.updateDistance()
-            self.update_obj_pos()
+            self.updateObjPos()
             self.runSchedule()
+
 
             # call the current behaviour function
             self.behaviour()
