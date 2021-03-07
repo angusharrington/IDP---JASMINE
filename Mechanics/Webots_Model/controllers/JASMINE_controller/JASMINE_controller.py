@@ -37,11 +37,13 @@ class Jasmine(Robot):
         self.haveBlock      = False
         self.simTime        = self.timestep
         self.scheduleTuples = []
-        self.behaviour      = self.wander
+        self.behaviour      = self.startSpin
         self.obj_pos        = np.zeros( 3 )
         self.boc_loc        = np.zeros( 3 )
         self.greenLevel     = 0.0
         self.redLevel       = 0.0
+        self.spinStartTime  = 0
+        self.boxEdgeTimes   = [0, 0] 
 
         # x, y and z coords for convenience
         self.x, self.y, self.z = self.pos
@@ -74,7 +76,6 @@ class Jasmine(Robot):
         self.distanceSensor.enable( self.timestep )
         self.greenSensor.enable( self.timestep )
         self.redSensor.enable( self.timestep )
-        
 
         # set the motors' positions to infinity so we can use velocity control
         self.leftWheelMotor.setPosition(  float("inf") )
@@ -92,9 +93,11 @@ class Jasmine(Robot):
         self.leftWheelMotor.setVelocity(  leftSpeed  )
         self.rightWheelMotor.setVelocity( rightSpeed )
         
+
     def setClawMotor(self, clawAngle):
         
         self.clawMotor.setPosition( clawAngle )
+
 
     def schedule(self, delay, func):
 
@@ -119,10 +122,12 @@ class Jasmine(Robot):
             func()
             self.scheduleTuples.remove( (time, func) )
 
+
     def updateColourSensors(self):
     
         self.greenLevel = self.greenSensor.getValue() 
         self.redLevel   = self.redSensor.getValue() 
+
 
     def updatePositionAndVelocity(self):
 
@@ -147,13 +152,11 @@ class Jasmine(Robot):
         self.distances[-1] = self.getDistance()
 
 
-
     def updateObjPos(self):
        
         sensor_dist  = 0.232
 
         self.obj_pos = (norm( self.vel ) * (self.distances[-1] + sensor_dist) + self.pos)
-
 
 
     def checkForBox(self):
@@ -167,11 +170,57 @@ class Jasmine(Robot):
     # and control what the robot does at different parts of the process
 
 
+    def startSpin(self):
+
+        # record the spin start time
+        self.spinStartTime = self.simTime
+
+        # set motors to spin
+        self.setWheelSpeeds( 0.5, -0.5 )
+
+        # start the spinning behaviour
+        self.behaviour = self.spinAndFindBox
+
+
+    def spinAndFindBox(self):
+
+        if self.distances[-2] == 0:
+            return
+
+        # check if the distance sensor detected a downwards step
+        if self.distances[-2] - self.distances[-1] > 0.2:
+
+            self.boxEdgeTimes[0] = self.simTime
+
+        # check if the distance sensor detected an upwards step
+        if self.distances[-2] - self.distances[-1] < -0.2:
+
+            self.boxEdgeTimes[1] = self.simTime
+
+            # start spinning in the opposite direction
+            self.setWheelSpeeds( -0.5, 0.5 )
+
+            # calculate how far back to rotate
+            rotationTime = ( self.boxEdgeTimes[1] - self.boxEdgeTimes[0] ) / 2
+
+            # after a time of rotationTime, call self.startBoxApproach
+            self.schedule( rotationTime, lambda : self.setWheelSpeeds(3.0, 3.0) )
+            self.schedule( rotationTime + self.timestep*6, self.startBoxApproach )
+
+
+
+    def startBoxApproach(self):
+
+        # set the box location and start the goToBox behaviour after a short delay
+        self.box_loc   = self.obj_pos
+        self.behaviour = self.goToBox
+
+
     def wander(self):
 
         # if we see a box in front of us, start the goToBox behaviour
         if self.checkForBox():
-            self.box_loc = self.obj_pos
+            self.box_loc   = self.obj_pos
             self.behaviour = self.goToBox
 
         # decide if we are about to hit a wall
@@ -186,17 +235,13 @@ class Jasmine(Robot):
     def goToBox(self):
 
         # if we are close to the box then stop
-        if np.linalg.norm(self.box_loc - self.pos) < 0.26:
+        if np.linalg.norm(self.box_loc - self.pos) < 0.12:
             self.behaviour = self.checkBox
             
         print('hello', np.linalg.norm(self.box_loc - self.pos))
         self.setClawMotor( 1.8 )
         
         self.setWheelSpeeds(3.0, 3.0)
-
-
-
-
 
 
     def checkBox(self):
@@ -207,8 +252,6 @@ class Jasmine(Robot):
 
         print(self.greenSensor.getValue())
         
-        
-
 
 
     def mainLoop(self):
@@ -218,7 +261,7 @@ class Jasmine(Robot):
 
             self.simTime += self.timestep
 
-            ## update the time, distance sensor reading and scheduled tasks
+            # update the time, distance sensor reading and scheduled tasks
             self.updateColourSensors()            
             self.updatePositionAndVelocity()
             self.updateDistance()
