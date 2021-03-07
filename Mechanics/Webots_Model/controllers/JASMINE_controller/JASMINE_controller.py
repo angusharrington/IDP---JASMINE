@@ -137,7 +137,7 @@ class Jasmine(Robot):
         sensorRange  = 0.8
         object_position = norm( self.vel ) * (distanceSensed + sensor_dist) + self.pos
         
-        if object_position[0] < 1.16 and object_position[1] < 1.16 and distanceSensed < sensorRange:
+        if abs(object_position[0]) < 1.15 and abs(object_position[2]) < 1.15 and distanceSensed < sensorRange:
             return object_position
         else:
             return False
