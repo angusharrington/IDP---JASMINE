@@ -130,14 +130,14 @@ class Jasmine(Robot):
         self.distances[-1] = self.getDistance()
 
 
-
-    def box_detection(self, distanceSensed):
+    def box_detection(self):
 
         sensor_dist  = 0.232
         sensorRange  = 0.8
-        object_position = norm( self.vel ) * (distanceSensed + sensor_dist) + self.pos
+        object_position = norm( self.vel ) * (self.distances[-1] + sensor_dist) + self.pos
         
-        if abs(object_position[0]) < 1.15 and abs(object_position[2]) < 1.15 and distanceSensed < sensorRange:
+        if abs(object_position[0]) < 1.15 and abs(object_position[2]) < 1.15 and self.distances[-1] < sensorRange:
+            print(object_position)
             return object_position
         else:
             return False
@@ -145,7 +145,7 @@ class Jasmine(Robot):
 
     def checkForBox(self):
 
-        print( self.distances[-1] - self.distances[-2] )
+        print( self.distances[-1])
 
         # if we detect a step change in the distance sensor's measurement then assume a box was detected
         return self.distances[-2] != 0 and not -0.2 < self.distances[-1] - self.distances[-2] < 0.2
