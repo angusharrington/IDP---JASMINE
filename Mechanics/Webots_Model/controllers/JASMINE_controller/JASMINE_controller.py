@@ -4,7 +4,6 @@
 
 import math
 import numpy as np
-import matplotlib.pyplot as plt
 from controller import Robot, Motor, DistanceSensor, GPS
 
 
@@ -26,18 +25,18 @@ class Jasmine(Robot):
 
         # get the world's timestep and initialise the sensors
         self.timestep = int( self.getBasicTimeStep() )
-        self.initialiseSensors()
 
         # variables that help the robot work
         self.pos            = np.zeros( 3 )
         self.vel            = np.zeros( 3 )
         self.posHist        = np.zeros( (10, 3) ) # stores last 10 positions of robot - maybe unneccesary
-        self.distances      = [0, 0, 0]
+        self.distances      = np.zeros( 10 ) # last 10 distances
         self.clawAngle      = 0.0
         self.gettingBlock   = False
         self.haveBlock      = False
         self.simTime        = self.timestep
         self.scheduleTuples = []
+        self.behaviour      = self.wander
 
         # x, y and z coords for convenience
         self.x, self.y, self.z = self.pos
@@ -46,7 +45,11 @@ class Jasmine(Robot):
         self.stop = lambda : self.setWheelSpeeds( 0.0, 0.0 )
         self.spin = lambda : self.setWheelSpeeds( 1.5, 3.0 )
 
-        # enter the main loop
+        # function to get distance sensor reading
+        self.getDistance = lambda : distanceFromReading( self.distanceSensor.getValue() )
+
+        # initialise the sensors and enter the main loop
+        self.initialiseSensors()
         self.mainLoop()
 
 
@@ -71,6 +74,14 @@ class Jasmine(Robot):
         self.setWheelSpeeds( 0.0, 0.0 )
 
 
+    def setWheelSpeeds(self, leftSpeed, rightSpeed):
+
+        # set the two wheel speeds
+        self.leftWheelMotor.setVelocity(  leftSpeed  )
+        self.rightWheelMotor.setVelocity( rightSpeed )
+
+
+
     def schedule(self, delay, func):
 
         # call func after delay millisceonds
@@ -78,6 +89,8 @@ class Jasmine(Robot):
         # add a tuple to the schedule containing the time at which
         # to call (in milliseconds) and the function to call
         self.scheduleTuples.append( ( self.simTime + delay, func ) )
+
+        return ( self.simTime + delay, func )
 
 
     def runSchedule(self):
@@ -93,6 +106,7 @@ class Jasmine(Robot):
             self.scheduleTuples.remove( (time, func) )
 
 
+
     def updatePositionAndVelocity(self):
 
         # set the current position to the value of the gps (as a numpy array)
@@ -106,42 +120,15 @@ class Jasmine(Robot):
         self.posHist[-1] = self.pos
 
         # set the velocity using the last 2 positions in the position history array
-        # could use last 3 positions to get O(x^2) error
         self.vel = ( self.posHist[-1] - self.posHist[-2] ) / ( self.timestep / 1000 )
 
 
     def updateDistance(self):
 
-        # add the distances sensor reading to the distances list
-        self.distances.append( distanceFromReading( self.distanceSensor.getValue() ) )
+        # add the distance sensors reading to the distances list
+        self.distances     = np.roll( self.distances, -1 )
+        self.distances[-1] = self.getDistance()
 
-        # if we detect a step change in distance measured by the sensor then a block is in front
-        if self.distances[-2] - self.distances[-1] > 0.1:
-
-            # calculae and print the block position
-            blockPos = self.box_detection( self.distances[-1] )
-            print( f"{self.simTime}: found block at {blockPos}" )
-
-
-    def setWheelSpeeds(self, leftSpeed, rightSpeed):
-
-        # set the two wheel speeds
-        self.leftWheelMotor.setVelocity(  leftSpeed  )
-        self.rightWheelMotor.setVelocity( rightSpeed )
-
-
-    def wander(self):
-
-        # just drive around avoiding walls
-
-        # decide if we are about to hit a wall
-        nearWall         = abs( self.x ) > 0.8 or abs( self.z ) > 0.8
-        goingTowardsWall = np.dot( norm( self.pos ), norm( self.vel ) ) > 0.1
-        shouldTurn       = nearWall and goingTowardsWall
-
-        # set motors to turn if neccesary
-        self.leftWheelMotor.setVelocity(  15.0 )
-        self.rightWheelMotor.setVelocity( 14.0 - shouldTurn * 10 )
 
 
     def box_detection(self, distanceSensed):
@@ -156,32 +143,70 @@ class Jasmine(Robot):
             return False
 
 
-    def mainLoop(self):
+    def checkForBox(self):
 
-        # start a spin and stop after 2.55 seconds - equal to 1 revolution
-        # self.spin()
-        # self.schedule( 5000, self.stop )
-        # self.schedule( 6000, self.plotDists )
+        print( self.distances[-1] - self.distances[-2] )
+
+        # if we detect a step change in the distance sensor's measurement then assume a box was detected
+        return self.distances[-2] != 0 and not -0.2 < self.distances[-1] - self.distances[-2] < 0.2
+
+
+    # --- Behaviours ---
+    # functions that can be assigned to the self.behaviour variable to be called once per frame
+    # and control what the robot does at different parts of the process
+
+
+    def wander(self):
+
+        # if we see a box in front of us, start the goToBox behaviour
+        if self.checkForBox():
+            self.behaviour = self.goToBox
+
+        # decide if we are about to hit a wall
+        nearWall         = abs( self.x ) > 0.8 or abs( self.z ) > 0.8
+        goingTowardsWall = np.dot( norm( self.pos ), norm( self.vel ) ) > 0.1
+        shouldTurn       = nearWall and goingTowardsWall
+
+        # set motors to turn to avoid the wall
+        self.setWheelSpeeds( 15.0, 14.0 - shouldTurn * 10 )
+
+
+    def goToBox(self):
+
+        # if we are close to the box then stop
+        if self.distances[-1] < 0.15:
+            self.behaviour = self.stop
+
+        # just go forward, towards the box
+        self.setWheelSpeeds( 7.0, 7.0 )
+
+
+
+    def stop(self):
+
+        # stop the robot
+        self.setWheelSpeeds( 0.0, 0.0 )
+
+
+
+    def mainLoop(self):
 
         # loop until simulation end
         while self.step( self.timestep ) != -1:
 
             self.simTime += self.timestep
 
+            ## update the time, distance sensor reading and scheduled tasks
             self.updatePositionAndVelocity()
             self.updateDistance()
             self.runSchedule()
-            self.wander()
+
+            # call the current behaviour function
+            self.behaviour()
 
             # can print position and velocity
             # print( "pos: " + " ".join( ["%.2f" % v for v in self.pos] ) )
             # print( "vel: " + " ".join( ["%.2f" % v for v in self.vel] ) )
-
-
-    def plotDists(self):
-
-        plt.plot( self.distances )
-        plt.show()
 
 
 Jasmine()
