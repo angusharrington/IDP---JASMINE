@@ -122,7 +122,7 @@ class Jasmine(Robot):
         return ( self.simTime + delay, func )
 
 
-    def runSchedule(self):
+    def updateSchedule(self):
 
         # loop over scheduleTuples and run the ones whose time has been reached
         for time, func in self.scheduleTuples:
@@ -165,10 +165,9 @@ class Jasmine(Robot):
 
 
     def updateObjPos(self):
-       
+    
         sensor_dist  = 0.232
-
-        self.obj_pos = (norm( self.vel ) * (self.distances[-1, 1] + sensor_dist) + self.pos)
+        self.obj_pos = norm( self.vel ) * (self.distances[-1, 1] + sensor_dist) + self.pos
 
 
     def checkForBox(self):
@@ -185,7 +184,7 @@ class Jasmine(Robot):
     def startSpin(self):
 
         # set motors to spin
-        self.setWheelSpeeds( 0.5, -0.5 )
+        self.setWheelSpeeds( 3.0, -3.0 )
 
         # start the spinning behaviour
         self.behaviour = self.spinAndFindBox
@@ -193,6 +192,7 @@ class Jasmine(Robot):
 
     def spinAndFindBox(self):
 
+        # if the distances array is not yet initialised with data then return
         if self.distances[-2, 1] == 0:
             return
 
@@ -247,7 +247,7 @@ class Jasmine(Robot):
         # if we touching the box then the motor torque has increased
         # switch to the self.checkBox behaviour when this happens
 
-        if self.rightWheelMotor.getTorqueFeedback() > 0.11:
+        if self.rightWheelMotor.getTorqueFeedback() > 0.12:
             
             self.behaviour = self.checkBox
 
@@ -274,7 +274,7 @@ class Jasmine(Robot):
             self.updatePositionAndVelocity()
             self.updateDistance()
             self.updateObjPos()
-            self.runSchedule()
+            self.updateSchedule()
 
 
             # call the current behaviour function
