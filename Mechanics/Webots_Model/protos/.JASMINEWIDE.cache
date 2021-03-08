@@ -1,9 +1,9 @@
 Webots Proto Cache File version 1.5
-protoFileHash: 5669f6b31de71e6fb634b617df2f64ca
+protoFileHash: 7281a0f546f85ae53d22e1c1d9ea38cf
 needsRobotAncestor: 1
 baseType: Robot
 slotType: 
-parameters: translation,rotation
+parameters: translation,rotation,bodyMass
 tags: 
 license: 
 licenseUrl: 
