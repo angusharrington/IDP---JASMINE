@@ -5,7 +5,8 @@ PROTO JASMINE_v2 [
 ]
 {
 Robot {
-  translation 0 0.0724358 0
+  translation IS translation
+  rotation IS rotation
   children [
     LightSensor {
       translation 0.18 0.1 -0.002
@@ -125,7 +126,7 @@ Robot {
       jointParameters HingeJointParameters {
         position 2.5253684986159427e-09
         axis 0 0 -1
-        anchor 0.05 -0.02 0.06
+        anchor 0.05 -0.016 0.06
       }
       device [
         DEF Wheel1 RotationalMotor {
@@ -134,7 +135,7 @@ Robot {
         }
       ]
       endPoint Solid {
-        translation 0.050000087415684104 -0.015993692754018136 0.05999999999997346
+        translation 0.05000008740558263 -0.015993692754018136 0.05999999999997346
         rotation 1 1.5414408722372822e-09 1.5414408131133853e-09 1.570796325166792
         children [
           DEF Wheel Shape {
@@ -158,7 +159,7 @@ Robot {
       jointParameters HingeJointParameters {
         position 2.525400603234157e-09
         axis 0 0 -1
-        anchor 0.05 -0.02 -0.06
+        anchor 0.05 -0.016 -0.06
       }
       device [
         DEF Wheel2 RotationalMotor {
@@ -167,7 +168,7 @@ Robot {
         }
       ]
       endPoint Solid {
-        translation 0.05000008741577866 -0.015993692754490675 -0.06000000000002613
+        translation 0.05000008740567706 -0.015993692754490675 -0.06000000000002613
         rotation 1 1.5408048436471513e-09 1.5408047277247079e-09 1.5707962818133199
         children [
           USE Wheel
@@ -190,8 +191,8 @@ Robot {
         }
       ]
       endPoint Solid {
-        translation 0.21749919941634727 0.004998337309000997 1.399587367348858e-12
-        rotation -0.9774889462630754 -1.4391698605332494e-07 0.21098663449015462 1.5158429154317417e-05
+        translation 0.21749919941634704 0.004998337309001011 1.3995873673488564e-12
+        rotation -0.9774889395166642 -1.439169850600419e-07 0.2109866657458868 1.5158546339941013e-05
         children [
           DistanceSensor {
             translation 0.009 -0.021 0.0325

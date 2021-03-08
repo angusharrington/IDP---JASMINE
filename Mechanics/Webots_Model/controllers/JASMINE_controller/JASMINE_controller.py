@@ -1,4 +1,3 @@
-
 # idp group L203
 # Johns Automated Sorter for Meaningless Inconsequential Non-existent Experiments
 
@@ -38,11 +37,11 @@ class Jasmine(Robot):
         self.simTime          = self.timestep
         self.scheduleTuples   = []
         self.behaviour        = self.startSpin
-        self.obj_pos          = np.zeros( 3 )
-        self.boc_loc          = np.zeros( 3 )
         self.greenLevel       = 0.0
         self.redLevel         = 0.0
         self.boxFirstEdgeTime = 0
+        self.prev2vel         = np.zeros( 2 )
+
 
         # x, y and z coords for convenience
         self.x, self.y, self.z = self.pos
@@ -155,6 +154,9 @@ class Jasmine(Robot):
 
         # set the velocity using the last 2 positions in the position history array
         self.vel = ( self.posHist[-1] - self.posHist[-2] ) / ( self.timestep / 1000 )
+        self.prev2vel[-2] = self.prev2vel[-1]        
+        self.prev2vel[-1] = np.linalg.norm(self.vel)
+
 
 
     def updateDistance(self):
@@ -162,12 +164,6 @@ class Jasmine(Robot):
         # add the distance sensors reading to the distances list
         self.distances     = np.roll( self.distances, -1, axis=0 )
         self.distances[-1] = self.getDistance()
-
-
-    def updateObjPos(self):
-    
-        sensor_dist  = 0.232
-        self.obj_pos = norm( self.vel ) * (self.distances[-1, 1] + sensor_dist) + self.pos
 
 
     def checkForBox(self):
@@ -210,6 +206,9 @@ class Jasmine(Robot):
 
             # calculate how far back to rotate
             rotationTime = ( self.simTime - self.boxFirstEdgeTime ) / 2
+            
+
+
 
             # after a time of rotationTime, call self.startBoxApproach
             self.schedule( rotationTime, self.startBoxApproach )
@@ -224,7 +223,6 @@ class Jasmine(Robot):
         # start to move forward and start the goToBox behaviour after 1 second (to allow motor torque to settle)
         self.setWheelSpeeds(5.0, 5.0)
         self.schedule( 1000, lambda : self.setBehaviour( self.goToBox ) )
-
 
     def wander(self):
 
@@ -245,10 +243,11 @@ class Jasmine(Robot):
     def goToBox(self):
 
         # if we touching the box then the motor torque has increased
+        # and distance to block is within a close margin to avoid anomalies
         # switch to the self.checkBox behaviour when this happens
 
-        if self.rightWheelMotor.getTorqueFeedback() > 0.12:
-            
+        if self.prev2vel[1] - self.prev2vel[0] > 0.0006:
+
             self.behaviour = self.checkBox
 
 
@@ -258,7 +257,7 @@ class Jasmine(Robot):
         self.setWheelSpeeds( 0.0, 0.0 )
         self.setClawMotor(0)
 
-        print(self.greenSensor.getValue())
+        print(self.greenSensor.getValue(), self.redSensor.getValue())
         
 
 
@@ -273,7 +272,6 @@ class Jasmine(Robot):
             self.updateColourSensors()            
             self.updatePositionAndVelocity()
             self.updateDistance()
-            self.updateObjPos()
             self.updateSchedule()
 
 
