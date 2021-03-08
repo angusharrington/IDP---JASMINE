@@ -41,6 +41,11 @@ class Jasmine(Robot):
         self.redLevel         = 0.0
         self.boxFirstEdgeTime = 0
         self.prev2vel         = np.zeros( 2 )
+        self.greenCentre      = np.array([0, 0, -0.4])
+        self.redCentre        = np.array([0, 0, 0.4])
+        
+        # Robot dependent, green = 1, red = 0
+        self.colour           = 1
 
 
         # x, y and z coords for convenience
@@ -197,18 +202,17 @@ class Jasmine(Robot):
 
             # record the time that this happened
             self.boxFirstEdgeTime = self.simTime
+            
+
 
         # check if the left distance sensor detected a downwards step
         if self.distances[-2, 0] - self.distances[-1, 0] > 0.2:
 
             # start spinning in the opposite direction
             self.setWheelSpeeds( -0.5, 0.5 )
-
+            
             # calculate how far back to rotate
             rotationTime = ( self.simTime - self.boxFirstEdgeTime ) / 2
-            
-
-
 
             # after a time of rotationTime, call self.startBoxApproach
             self.schedule( rotationTime, self.startBoxApproach )
@@ -256,7 +260,46 @@ class Jasmine(Robot):
         self.setWheelSpeeds( 0.0, 0.0 )
         self.setClawMotor(0)
 
-        print(self.greenSensor.getValue(), self.redSensor.getValue())
+        if self.greenSensor.getValue() > 0.99:
+            colour = 1
+            
+        if self.redSensor.getValue() > 0.99:
+            colour = 0
+            
+        if colour == self.colour:
+            self.setBehaviour( self.carryBoxHome )
+ #       if colour != self.colour:
+ #           self.setBehaviour( self.continueSearching)
+            
+    def carryBoxHome(self):
+        
+        
+        if self.colour == 1:
+             
+            homeDirection = self.pos - self.greenCentre
+             
+        if self.colour == 0:
+             
+            homeDirection = self.pos - self.greenCentre
+      # This doesn't work, need to figure out how to point in the right direction and go home 
+            
+#        self.setWheelSpeeds(3.0, 1.0)
+         
+ #       pointDirection = self.posHist[-1] - self.posHist[-2]
+        
+
+  #      point = np.array([norm(self.vel)[0], norm(self.vel)[2]])
+   #     home = np.array([norm(homeDirection)[0], norm(homeDirection)[2]])
+        
+        
+    #    print(np.tensordot(home, point, axes = 1))
+    
+     #   if np.tensordot(home, point, axes = 1) < -0.99:
+             
+      #      self.setWheelSpeeds(2, 2)
+
+         
+                  
         
 
 
