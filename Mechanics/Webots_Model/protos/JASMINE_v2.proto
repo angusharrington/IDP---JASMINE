@@ -5,7 +5,8 @@ PROTO JASMINE_v2 [
 ]
 {
 Robot {
-  translation 0 0.0724358 0
+  translation IS translation
+  rotation IS rotation
   children [
     LightSensor {
       translation 0.18 0.1 -0.002
