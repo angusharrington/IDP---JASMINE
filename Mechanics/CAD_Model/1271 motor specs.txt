@@ -1,6 +1,0 @@
-1271-12-90	(pg4)
-
-min voltage 	12V
-max torque 	8Nm
-speed no load	30rpm
-speed max torq	18rpm

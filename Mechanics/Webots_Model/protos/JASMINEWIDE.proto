@@ -1,7 +1,7 @@
 PROTO JASMINEWIDE [
   field SFVec3f    translation  0 0 0
   field SFRotation rotation     0 1 0 0
-  field SFFloat    bodyMass     0.8
+  # field SFFloat    bodyMass     0.8
 ]
 {
 Robot {
@@ -179,7 +179,7 @@ Robot {
                 }
               }
             ]
-            name "DistanceSensoRIGHT"
+            name "DistanceSensorRIGHT"
             lookupTable [
               0 0 0
               0.04 2.5 0
