@@ -46,6 +46,7 @@ class Jasmine(Robot):
         self.redLevel         = 0.0
         self.boxFirstEdgeTime = 0
         self.prev2vel         = np.zeros( 2 )
+        self.receivedData     = np.array([])
 
         # Robot dependant variables
         self.colour = Colour.RED
@@ -173,10 +174,17 @@ class Jasmine(Robot):
         self.prev2vel[-1] = np.linalg.norm(self.vel)
 
         # from the difference in gps readings, calculate the angle we are facing and update the forward vector
-        gpsDifference = np.array( [self.gpsOffset.getValues()[0], self.gpsOffset.getValues()[2]]) - np.array([self.pos[0], self.pos[2]])
+        gpsDifference = self.gpsOffset.getValues() - self.pos
 
         self.angle   = np.arctan2( gpsDifference[2], gpsDifference[0] )
         self.forward = norm( gpsDifference )
+
+        # update received data
+        if self.receiver.getQueueLength() > 0:
+            data = self.receiver.getData()
+            np.append(self.receivedData, data)
+
+
 
 
     def updateDistance(self):
