@@ -1,6 +1,3 @@
-# idp group L203
-# Johns Automated Sorter for Meaningless Inconsequential Non-existent Experiments
-
 import math
 import numpy as np
 from controller import Robot, Motor, DistanceSensor, GPS
@@ -72,6 +69,7 @@ class Jasmine(Robot):
 
         # get all the robot's sensors
         self.gps                 = GPS( "gps" )
+        self.gps2                = GPS( "gpsOFFSET" )
         self.leftWheelMotor      = self.getDevice( "LeftWheelMotor"      )
         self.rightWheelMotor     = self.getDevice( "RightWheelMotor"     )
         self.clawMotor           = self.getDevice( "ClawMotor"           )
@@ -82,6 +80,7 @@ class Jasmine(Robot):
 
         # enable the sensors
         self.gps.enable( self.timestep )
+        self.gps2.enable(self.timestep )
         self.rightDistanceSensor.enable( self.timestep )
         self.rightWheelMotor.enableTorqueFeedback( self.timestep )
         self.leftDistanceSensor.enable( self.timestep )
@@ -186,9 +185,22 @@ class Jasmine(Robot):
 
         # set motors to spin
         self.setWheelSpeeds( 3.0, -3.0 )
-
+        print(self.distances[-1])
         # start the spinning behaviour
         self.behaviour = self.spinAndFindBox
+
+    def LocationsRoute(self):
+    
+        # for red robot
+        
+        PointsOrder = np.array([[0, 0.05, 0], [0.8, 0.05, 0], [0.8, 0.05, 0.8], [0, 0.05, 0.8], [-0.8, 0.05, 0.8]])
+
+        # for green robot
+        #PointsOrder = np.array([[0.8, 0.05, -0.8], [0, 0.05, -0.8], [-0.8, 0.05, -0.8], [-0.8, 0.05, 0]])
+        
+        for i in PointsOrder:
+        
+            self.behaviour = self.goToPoint(i)
 
 
     def spinAndFindBox(self):
@@ -198,13 +210,13 @@ class Jasmine(Robot):
             return
 
         # check if the right distance sensor detected a downwards step
-        if self.distances[-1, 1] - self.distances[-2,1] < -0.2:
+        if self.distances[-1, 1] - self.distances[-2,1] < -0.1:
 
             # record the time that this happened
             self.boxFirstEdgeTime = self.simTime
             
         # check if the left distance sensor detected an upwards step
-        if self.distances[-1, 0] - self.distances[-2, 0] > 0.2:
+        if self.distances[-1, 0] - self.distances[-2, 0] > 0.1:
 
             # start spinning in the opposite direction
             self.setWheelSpeeds( -3.0, 3.0 )
@@ -288,6 +300,7 @@ class Jasmine(Robot):
          
     def continueSearching(self):
 
+        
         print("continueSearching not yet implemented")
 
 
