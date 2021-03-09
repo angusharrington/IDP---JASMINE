@@ -2,6 +2,7 @@ import math
 import numpy as np
 from controller import Robot, Motor, DistanceSensor, GPS
 from enum import Enum
+import struct
 
 # norm(v) returns v scaled to unit length
 norm = lambda v : v / np.linalg.norm(v)
@@ -182,7 +183,8 @@ class Jasmine(Robot):
         # update received data
         if self.receiver.getQueueLength() > 0:
             data = self.receiver.getData()
-            np.append(self.receivedData, data)
+            vector = struct.unpack("fff", data)
+            np.append(self.receivedData, np.asarray(vector))
 
 
 
@@ -367,9 +369,11 @@ class Jasmine(Robot):
     def continueSearching(self):
 
         # Note 0.1 chosen arbitrarily, needs to be made more accurate
-        self.emitter.send(self.pos+self.forward*0.1)
+        blockLoc = self.pos+self.forward*0.1
         
-
+        # turn data in array into c type data for transmission
+        message = struct.pack('fff', blockLoc[0], blockLoc[1], blockLoc[2])
+        self.emitter.send(message)
         
         print("continueSearching not yet implemented")
 
