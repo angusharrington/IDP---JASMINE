@@ -79,8 +79,8 @@ class Jasmine(Robot):
         self.leftDistanceSensor  = self.getDevice( "DistanceSensorLEFT"  )
         self.greenSensor         = self.getDevice( "lightSensorGREEN"    )
         self.redSensor           = self.getDevice( "lightSensorRED"      )
-        self.emitter            = self.getDevice( "emitter"             )
-        self.receiver            = self.getDevice( "receiver"            )
+        self.emitter            = self.getDevice( "Emitter"             )
+        self.receiver            = self.getDevice( "Receiver"            )
 
         # enable the sensors
         self.gps.enable( self.timestep )
@@ -91,7 +91,7 @@ class Jasmine(Robot):
         self.greenSensor.enable( self.timestep )
         self.redSensor.enable( self.timestep )
         self.receiver.enable( self.timestep )
-        self.emitter.enable( self.timestep )
+
 
         # code for single distance sensor robot
         # self.distanceSensor = self.getDevice( "DistanceSensorFront" )
@@ -224,13 +224,17 @@ class Jasmine(Robot):
             
     def goToPoint(self, point):
     
-        direction = point - np.array([self.pos[0], self.pos[2]])
-        normDirection = norm( direction )
+        direction = point - self.pos
+        turnToDirection(direction)
+
+        self.setWheelSpeeds(5.0, 5.0)
         
-        self.setWheelSpeeds( -1.0, 1.0 )
-        print("y0", abs(normDirection[0]-self.forward[0]))
- #       if abs(normDirection[0]-self.forward[0])<0.01 :
-  #          self.setWheelSpeeds(5.0, 5.0)
+        if np.linalg.norm( point - self.pos ) < 0.1:
+
+            self.behaviour = self.stop
+
+        
+
 
 
     def spinAndFindBox(self):
@@ -324,7 +328,7 @@ class Jasmine(Robot):
         self.setWheelSpeeds(5.0 - turnAmount * 7.0, 5.0 + turnAmount * 7.0)
 
         # if we are home then stop
-        if np.linalg.norm( self.home - self.pos ) < 0.2:
+        if np.linalg.norm( self.home - self.pos ) < 0.1:
 
             self.behaviour = self.stop
 
