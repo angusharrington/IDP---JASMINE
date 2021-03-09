@@ -3,6 +3,7 @@ import numpy as np
 from controller import Robot, Motor, DistanceSensor, GPS
 from enum import Enum
 import struct
+import sys
 
 # norm(v) returns v scaled to unit length
 norm = lambda v : v / np.linalg.norm(v)
@@ -49,9 +50,18 @@ class Jasmine(Robot):
         self.prev2vel         = np.zeros( 2 )
         self.receivedData     = np.array([])
 
+
         # Robot dependant variables
-        self.colour = Colour.RED
-        self.home   = redCentre
+        if sys.argv[1] == "red":
+
+            self.colour = Colour.RED
+            self.home   = redCentre
+
+        else if sys.argv[1] == "green":
+
+            self.colour = Colour.GREEN
+            self.home   = greenCentre
+
 
         # x, y and z coords for convenience
         self.x, self.y, self.z = self.pos

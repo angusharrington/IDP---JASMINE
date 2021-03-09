@@ -1,7 +1,9 @@
 PROTO JASMINE_v4 [
-  field SFVec3f    translation  0 0.05 0
-  field SFRotation rotation     0 1 0 0
-  # field SFFloat    bodyMass     0.8
+  field SFVec3f    translation    0 0.05 0
+  field SFRotation rotation       0 1 0 0
+  field SFColor    baseColor      1 0 0
+  field SFString   name           "JASMINE_red"
+  field MFString   red_or_green   ["red"]
 ]
 {
 Robot {
@@ -70,7 +72,7 @@ Robot {
           children [
             DEF extrusion Shape {
               appearance PBRAppearance {
-                baseColor 1 0 0
+                baseColor IS baseColor
                 metalness 0
               }
               geometry Box {
@@ -84,7 +86,7 @@ Robot {
           children [
             DEF extrusion Shape {
               appearance PBRAppearance {
-                baseColor 1 0 0
+                baseColor IS baseColor
                 metalness 0
               }
               geometry Box {
@@ -98,7 +100,7 @@ Robot {
           children [
             Shape {
               appearance PBRAppearance {
-                baseColor 0 0 0
+                baseColor IS baseColor
                 metalness 0
               }
               geometry Cylinder {
@@ -124,7 +126,7 @@ Robot {
         }
         DEF Box Shape {
           appearance DEF Body_App PBRAppearance {
-            baseColor 1 0 0
+            baseColor IS baseColor
             metalness 0
           }
           geometry Box {
@@ -339,11 +341,12 @@ Robot {
       }
     }
   ]
-  name "robot(2)"
   contactMaterial "Smooth"
   boundingObject USE Body
   physics DEF Physics_Body Physics {
   }
   controller "JASMINE_controller"
+  controllerArgs IS red_or_green
+  name IS name
 }
 }
