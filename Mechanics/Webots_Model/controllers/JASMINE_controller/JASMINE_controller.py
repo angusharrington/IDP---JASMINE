@@ -38,6 +38,7 @@ class Jasmine(Robot):
         self.pos              = np.zeros( 3 )
         self.vel              = np.zeros( 3 )
         self.angle            = 0 # angle to x axis
+        self.forward          = np.zeros( 3 ) # unit vector in the direction we are facing
         self.posHist          = np.zeros( (10, 3) ) # stores last 10 positions of robot - maybe unneccesary
         self.distances        = np.zeros( (10, 2) ) # last 10 distances, 10 rows of [leftDistance, rightDistance]
         self.clawAngle        = 0.0
@@ -170,10 +171,13 @@ class Jasmine(Robot):
         self.prev2vel[-2] = self.prev2vel[-1]        
         self.prev2vel[-1] = np.linalg.norm(self.vel)
 
-        self.gpsDifference = np.array( self.gpsOffset.getValues() ) - self.pos
-        self.angle = np.arctan2( self.gpsDifference[2], self.gpsDifference[0] )
+        # from the difference in gps readings, calculate the angle we are facing and update the forward vector
+        gpsDifference = np.array( self.gpsOffset.getValues() ) - self.pos
 
-        print(self.angle)
+        self.angle = np.arctan2( gpsDifference[2], gpsDifference[0] )
+        self.forward = norm( gpsDifference )
+
+        print(self.forward)
 
 
     def updateDistance(self):
@@ -188,6 +192,11 @@ class Jasmine(Robot):
     # and control what the robot does at different parts of the process
 
 
+    def turnToAngle(self, angle, behaviourWhenFinished=lambda : None):
+
+        pass
+
+
     def startSpin(self):
 
         # set motors to spin
@@ -198,7 +207,7 @@ class Jasmine(Robot):
 
 
     def spinAndFindBox(self):
-        
+
         # if the distances array is not yet initialised with data then return
         if self.distances[-2, 1] == 0:
             return
