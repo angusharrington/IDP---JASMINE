@@ -57,7 +57,7 @@ class Jasmine(Robot):
             self.colour = Colour.RED
             self.home   = redCentre
 
-        else if sys.argv[1] == "green":
+        elif sys.argv[1] == "green":
 
             self.colour = Colour.GREEN
             self.home   = greenCentre
