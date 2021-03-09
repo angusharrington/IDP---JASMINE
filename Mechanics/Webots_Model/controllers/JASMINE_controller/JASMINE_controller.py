@@ -91,7 +91,7 @@ class Jasmine(Robot):
         self.greenSensor.enable( self.timestep )
         self.redSensor.enable( self.timestep )
         self.receiver.enable( self.timestep )
-        self.emitter.enable( self.timestep )
+        # self.emitter.enable( self.timestep )
 
         # code for single distance sensor robot
         # self.distanceSensor = self.getDevice( "DistanceSensorFront" )
@@ -173,7 +173,7 @@ class Jasmine(Robot):
         self.prev2vel[-1] = np.linalg.norm(self.vel)
 
         # from the difference in gps readings, calculate the angle we are facing and update the forward vector
-        gpsDifference = np.array( [self.gpsOffset.getValues()[0], self.gpsOffset.getValues()[2]]) - np.array([self.pos[0], self.pos[2]])
+        gpsDifference = np.array( self.gpsOffset.getValues() - self.pos )
 
         self.angle   = np.arctan2( gpsDifference[2], gpsDifference[0] )
         self.forward = norm( gpsDifference )
@@ -216,8 +216,6 @@ class Jasmine(Robot):
         # set the wheel speeds based on this value
         self.setWheelSpeeds( 8.0+turnAmount, 8.0-turnAmount )
 
-        print( np.linalg.norm( direction ) )
-
         # when we have arrived, start the next behaviour
         if np.linalg.norm( direction ) < 0.01:
             self.behaviour = nextBehaviour
@@ -244,16 +242,6 @@ class Jasmine(Robot):
         for i in PointsOrder:
         
             self.setBehaviour(self.goToPoint(i))
-            
-    def goToPoint(self, point):
-    
-        direction = point - np.array([self.pos[0], self.pos[2]])
-        normDirection = norm( direction )
-        
-        self.setWheelSpeeds( -1.0, 1.0 )
-        print("y0", abs(normDirection[0]-self.forward[0]))
- #       if abs(normDirection[0]-self.forward[0])<0.01 :
-  #          self.setWheelSpeeds(5.0, 5.0)
 
 
     def spinAndFindBox(self):
@@ -265,13 +253,11 @@ class Jasmine(Robot):
         # check if the right distance sensor detected a downwards step
         if self.distances[-1, 1] - self.distances[-2,1] < -0.15:
 
-
             # record the time that this happened
             self.boxFirstEdgeTime = self.simTime
             
         # check if the left distance sensor detected an upwards step
         if self.distances[-1, 0] - self.distances[-2, 0] > 0.15:
-
 
             # start spinning in the opposite direction
             self.setWheelSpeeds( -1.0, 1.0 )
@@ -302,7 +288,7 @@ class Jasmine(Robot):
 
         if self.greenLevel > 0.99 or self.redLevel > 0.99:
 
-            self.schedule( 1000, lambda : self.setBehaviour( self.checkBox) )
+            self.schedule( 1000, lambda : self.setBehaviour( self.checkBox ) )
 
 
     def checkBox(self):
@@ -327,29 +313,11 @@ class Jasmine(Robot):
         # if we picked up the right colour then bring it back, otherwise continue the search
         if colour == self.colour:
 
-            self.schedule( 1000, lambda : self.setBehaviour( self.carryBoxHome ) )
+            self.schedule( 1000, lambda : self.setBehaviour( lambda : self.goToPoint( self.home, self.stop ) ) )
 
         else:
 
             self.behaviour = self.continueSearching
-            
-
-    def carryBoxHome(self):
-        
-        # get the direction of home
-        homeDirection = norm( self.home - self.pos )
-            
-        # turnAmount is based on dot product of vel direction with home direction
-        # it is 2 when the vectors are 180 degrees apart and 0 when they are the same
-        turnAmount = 1 - np.dot( norm(self.vel), homeDirection )
-
-        # drive home
-        self.setWheelSpeeds(5.0 - turnAmount * 7.0, 5.0 + turnAmount * 7.0)
-
-        # if we are home then stop
-        if np.linalg.norm( self.home - self.pos ) < 0.2:
-
-            self.behaviour = self.stop
 
          
     def continueSearching(self):
