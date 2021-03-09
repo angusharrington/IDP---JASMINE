@@ -46,6 +46,7 @@ class Jasmine(Robot):
         self.redLevel         = 0.0
         self.boxFirstEdgeTime = 0
         self.prev2vel         = np.zeros( 2 )
+        self.receivedData     = np.array([])
 
         # Robot dependant variables
         self.colour = Colour.RED
@@ -79,8 +80,8 @@ class Jasmine(Robot):
         self.leftDistanceSensor  = self.getDevice( "DistanceSensorLEFT"  )
         self.greenSensor         = self.getDevice( "lightSensorGREEN"    )
         self.redSensor           = self.getDevice( "lightSensorRED"      )
-        self.emitter            = self.getDevice( "emitter"             )
-        self.receiver            = self.getDevice( "receiver"            )
+        self.emitter             = self.getDevice( "Emitter"             )
+        self.receiver            = self.getDevice( "Receiver"            )
 
         # enable the sensors
         self.gps.enable( self.timestep )
@@ -91,7 +92,6 @@ class Jasmine(Robot):
         self.greenSensor.enable( self.timestep )
         self.redSensor.enable( self.timestep )
         self.receiver.enable( self.timestep )
-        # self.emitter.enable( self.timestep )
 
         # code for single distance sensor robot
         # self.distanceSensor = self.getDevice( "DistanceSensorFront" )
@@ -173,10 +173,17 @@ class Jasmine(Robot):
         self.prev2vel[-1] = np.linalg.norm(self.vel)
 
         # from the difference in gps readings, calculate the angle we are facing and update the forward vector
-        gpsDifference = np.array( self.gpsOffset.getValues() - self.pos )
+        gpsDifference = self.gpsOffset.getValues() - self.pos
 
         self.angle   = np.arctan2( gpsDifference[2], gpsDifference[0] )
         self.forward = norm( gpsDifference )
+
+        # update received data
+        if self.receiver.getQueueLength() > 0:
+            data = self.receiver.getData()
+            np.append(self.receivedData, data)
+
+
 
 
     def updateDistance(self):
@@ -324,8 +331,6 @@ class Jasmine(Robot):
 
         # Note 0.1 chosen arbitrarily, needs to be made more accurate
         self.emitter.send(self.pos+self.forward*0.1)
-        
-
         
         print("continueSearching not yet implemented")
 

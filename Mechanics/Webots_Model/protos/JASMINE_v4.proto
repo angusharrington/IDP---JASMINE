@@ -9,8 +9,10 @@ Robot {
   rotation IS rotation
   children [
     Receiver {
+      name "Receiver"
     }
     Emitter {
+      name "Emitter"
     }
     LightSensor {
       translation 0.18 0.1 -0.002
