@@ -4,7 +4,7 @@ PROTO JASMINE_v3 [
   # field SFFloat    bodyMass     0.8
 ]
 {
-  translation IS translationj
+  translation IS translation
   rotaton IS rotation
   children [
     LightSensor {
@@ -50,7 +50,6 @@ PROTO JASMINE_v3 [
       colorFilter 1 0 0
     }
     GPS {
-      name "gpsCENTRE"
     }
     GPS {
       translation 0.01 0 0
