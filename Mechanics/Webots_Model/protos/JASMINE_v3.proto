@@ -1,5 +1,5 @@
 PROTO JASMINE_v3 [
-  field SFVec3f    translation  0 0 0
+  field SFVec3f    translation  0 0.05 0
   field SFRotation rotation     0 1 0 0
   # field SFFloat    bodyMass     0.8
 ]
@@ -51,6 +51,7 @@ Robot {
       colorFilter 1 0 0
     }
     GPS {
+      name "gps"
     }
     GPS {
       translation 0.01 0 0
@@ -192,6 +193,7 @@ Robot {
       device [
         RotationalMotor {
           name "ClawMotor"
+          controlPID 3 1 0
         }
       ]
       endPoint Solid {

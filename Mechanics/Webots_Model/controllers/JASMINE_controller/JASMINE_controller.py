@@ -37,6 +37,7 @@ class Jasmine(Robot):
         # variables that help the robot work
         self.pos              = np.zeros( 3 )
         self.vel              = np.zeros( 3 )
+        self.angle            = 0 # angle to x axis
         self.posHist          = np.zeros( (10, 3) ) # stores last 10 positions of robot - maybe unneccesary
         self.distances        = np.zeros( (10, 2) ) # last 10 distances, 10 rows of [leftDistance, rightDistance]
         self.clawAngle        = 0.0
@@ -71,7 +72,8 @@ class Jasmine(Robot):
     def initialiseSensors(self):
 
         # get all the robot's sensors
-        self.gps                 = GPS( "gps" )
+        self.gps                 = self.getDevice( "gps"                 )
+        self.gpsOffset           = self.getDevice( "gpsOFFSET"           )
         self.leftWheelMotor      = self.getDevice( "LeftWheelMotor"      )
         self.rightWheelMotor     = self.getDevice( "RightWheelMotor"     )
         self.clawMotor           = self.getDevice( "ClawMotor"           )
@@ -82,6 +84,7 @@ class Jasmine(Robot):
 
         # enable the sensors
         self.gps.enable( self.timestep )
+        self.gpsOffset.enable( self.timestep )
         self.rightDistanceSensor.enable( self.timestep )
         self.rightWheelMotor.enableTorqueFeedback( self.timestep )
         self.leftDistanceSensor.enable( self.timestep )
@@ -96,10 +99,8 @@ class Jasmine(Robot):
         self.leftWheelMotor.setPosition(  float("inf") )
         self.rightWheelMotor.setPosition( float("inf") )
         
-        # start the claw closed but limit the speed it can move at
-        # to prevent its inertia kicking the robot around
+        # start the claw closed
         self.clawMotor.setPosition( 0 )
-        self.clawMotor.setVelocity( 3 )
 
         # start with motors at 0 velocity
         self.setWheelSpeeds( 0.0, 0.0 )
@@ -169,6 +170,11 @@ class Jasmine(Robot):
         self.prev2vel[-2] = self.prev2vel[-1]        
         self.prev2vel[-1] = np.linalg.norm(self.vel)
 
+        self.gpsDifference = np.array( self.gpsOffset.getValues() ) - self.pos
+        self.angle = np.arctan2( self.gpsDifference[2], self.gpsDifference[0] )
+
+        print(self.angle)
+
 
     def updateDistance(self):
 
@@ -185,29 +191,33 @@ class Jasmine(Robot):
     def startSpin(self):
 
         # set motors to spin
-        self.setWheelSpeeds( 3.0, -3.0 )
+        self.setWheelSpeeds( 1.0, -1.0 )
 
         # start the spinning behaviour
         self.behaviour = self.spinAndFindBox
 
 
     def spinAndFindBox(self):
-
+        
         # if the distances array is not yet initialised with data then return
         if self.distances[-2, 1] == 0:
             return
 
         # check if the right distance sensor detected a downwards step
-        if self.distances[-1, 1] - self.distances[-2,1] < -0.2:
+        if self.distances[-1, 1] - self.distances[-2,1] < -0.15:
+
+            print(1)
 
             # record the time that this happened
             self.boxFirstEdgeTime = self.simTime
             
         # check if the left distance sensor detected an upwards step
-        if self.distances[-1, 0] - self.distances[-2, 0] > 0.2:
+        if self.distances[-1, 0] - self.distances[-2, 0] > 0.15:
+
+            print(2)
 
             # start spinning in the opposite direction
-            self.setWheelSpeeds( -3.0, 3.0 )
+            self.setWheelSpeeds( -1.0, 1.0 )
             
             # calculate how far back to rotate
             rotationTime = ( self.simTime - self.boxFirstEdgeTime ) / 2
@@ -222,7 +232,7 @@ class Jasmine(Robot):
         self.behaviour = lambda : None
 
         # open the claw ready to get the box
-        self.clawMotor.setPosition( 1.8 )
+        # self.clawMotor.setPosition( 1.8 )
 
         # start to move forward and start the goToBox behaviour after the robot speed has settled
         self.setWheelSpeeds(5.0, 5.0)
@@ -231,10 +241,9 @@ class Jasmine(Robot):
 
     def goToBox(self):
 
-        # when we hit the box, the speed of the robot will dip a bit
-        # when we detect this, switch to the checkBox behaviour
+        # when we detect light on one of the light sensors we have readched the box
 
-        if self.prev2vel[1] - self.prev2vel[0] > 0.0006:
+        if self.greenLevel > 0.99 or self.redLevel > 0.99:
 
             self.behaviour = self.checkBox
 
@@ -278,7 +287,7 @@ class Jasmine(Robot):
         turnAmount = 1 - np.dot( norm(self.vel), homeDirection )
 
         # drive home
-        self.setWheelSpeeds(5.0 - turnAmount * 4.0, 5.0 + turnAmount * 4.0)
+        self.setWheelSpeeds(5.0 - turnAmount * 7.0, 5.0 + turnAmount * 7.0)
 
         # if we are home then stop
         if np.linalg.norm( self.home - self.pos ) < 0.2:
