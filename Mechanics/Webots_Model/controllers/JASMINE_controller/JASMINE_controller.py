@@ -4,14 +4,22 @@
 import math
 import numpy as np
 from controller import Robot, Motor, DistanceSensor, GPS
-import time
-
+from enum import Enum
 
 # norm(v) returns v scaled to unit length
 norm = lambda v : v / np.linalg.norm(v)
 
 # calculate actual distance from the sensor reading
 distanceFromReading = lambda x : (0.32 / x) ** (5/6) - 0.1
+
+# colours enum
+class Colour(Enum):
+    RED   = 0
+    GREEN = 1
+
+# locations to move the boxes to
+greenCentre = np.array( [0, 0, -0.4] )
+redCentre   = np.array( [0, 0,  0.4] )
 
 
 # Jasmine class inherits from Robot class
@@ -32,8 +40,6 @@ class Jasmine(Robot):
         self.posHist          = np.zeros( (10, 3) ) # stores last 10 positions of robot - maybe unneccesary
         self.distances        = np.zeros( (10, 2) ) # last 10 distances, 10 rows of [leftDistance, rightDistance]
         self.clawAngle        = 0.0
-        self.gettingBlock     = False
-        self.haveBlock        = False
         self.simTime          = self.timestep
         self.scheduleTuples   = []
         self.behaviour        = self.startSpin
@@ -41,12 +47,10 @@ class Jasmine(Robot):
         self.redLevel         = 0.0
         self.boxFirstEdgeTime = 0
         self.prev2vel         = np.zeros( 2 )
-        self.greenCentre      = np.array([0, 0, -0.4])
-        self.redCentre        = np.array([0, 0, 0.4])
-        
-        # Robot dependent, green = 1, red = 0
-        self.colour           = 1
 
+        # Robot dependant variables
+        self.colour = Colour.RED
+        self.home   = redCentre
 
         # x, y and z coords for convenience
         self.x, self.y, self.z = self.pos
@@ -92,7 +96,10 @@ class Jasmine(Robot):
         self.leftWheelMotor.setPosition(  float("inf") )
         self.rightWheelMotor.setPosition( float("inf") )
         
+        # start the claw closed but limit the speed it can move at
+        # to prevent its inertia kicking the robot around
         self.clawMotor.setPosition( 0 )
+        self.clawMotor.setVelocity( 3 )
 
         # start with motors at 0 velocity
         self.setWheelSpeeds( 0.0, 0.0 )
@@ -163,18 +170,11 @@ class Jasmine(Robot):
         self.prev2vel[-1] = np.linalg.norm(self.vel)
 
 
-
     def updateDistance(self):
 
         # add the distance sensors reading to the distances list
         self.distances     = np.roll( self.distances, -1, axis=0 )
         self.distances[-1] = self.getDistance()
-
-
-    def checkForBox(self):
-        
-        # if we detect a step change in the distance sensor's measurement then assume a box was detected
-        return self.distances[-2] != 0 and abs(self.obj_pos[0]) < 1.15 and abs(self.obj_pos[1]) < 1.15 and not -0.2 < self.distances[-1] - self.distances[-2] < 0.2
 
 
     # --- Behaviours ---
@@ -197,19 +197,17 @@ class Jasmine(Robot):
         if self.distances[-2, 1] == 0:
             return
 
-        # check if the right distance sensor detected an upwards step
-        if self.distances[-2, 1] - self.distances[-1, 1] < -0.2:
+        # check if the right distance sensor detected a downwards step
+        if self.distances[-1, 1] - self.distances[-2,1] < -0.2:
 
             # record the time that this happened
             self.boxFirstEdgeTime = self.simTime
             
-
-
-        # check if the left distance sensor detected a downwards step
-        if self.distances[-2, 0] - self.distances[-1, 0] > 0.2:
+        # check if the left distance sensor detected an upwards step
+        if self.distances[-1, 0] - self.distances[-2, 0] > 0.2:
 
             # start spinning in the opposite direction
-            self.setWheelSpeeds( -0.5, 0.5 )
+            self.setWheelSpeeds( -3.0, 3.0 )
             
             # calculate how far back to rotate
             rotationTime = ( self.simTime - self.boxFirstEdgeTime ) / 2
@@ -218,37 +216,23 @@ class Jasmine(Robot):
             self.schedule( rotationTime, self.startBoxApproach )
 
 
-
     def startBoxApproach(self):
 
-        # open the claw ready to get the box
-        self.setClawMotor( 1.8 )
+        # stop the previous behaviour
+        self.behaviour = lambda : None
 
-        # start to move forward and start the goToBox behaviour after 1 second (to allow motor torque to settle)
+        # open the claw ready to get the box
+        self.clawMotor.setPosition( 1.8 )
+
+        # start to move forward and start the goToBox behaviour after the robot speed has settled
         self.setWheelSpeeds(5.0, 5.0)
         self.schedule( 1000, lambda : self.setBehaviour( self.goToBox ) )
-
-    def wander(self):
-
-        # if we see a box in front of us, start the goToBox behaviour
-        if self.checkForBox():
-            self.box_loc   = self.obj_pos
-            self.behaviour = self.goToBox
-
-        # decide if we are about to hit a wall
-        nearWall         = abs( self.x ) > 0.8 or abs( self.z ) > 0.8
-        goingTowardsWall = np.dot( norm( self.pos ), norm( self.vel ) ) > 0.1
-        shouldTurn       = nearWall and goingTowardsWall
-
-        # set motors to turn to avoid the wall
-        self.setWheelSpeeds( 8.0, 8.0 - shouldTurn * 7.0 )
 
 
     def goToBox(self):
 
-        # if we touching the box then the motor torque has increased
-        # and distance to block is within a close margin to avoid anomalies
-        # switch to the self.checkBox behaviour when this happens
+        # when we hit the box, the speed of the robot will dip a bit
+        # when we detect this, switch to the checkBox behaviour
 
         if self.prev2vel[1] - self.prev2vel[0] > 0.0006:
 
@@ -257,51 +241,54 @@ class Jasmine(Robot):
 
     def checkBox(self):
 
-        # stop the robot
+        # stop the robot and close the claw
         self.setWheelSpeeds( 0.0, 0.0 )
         self.setClawMotor(0)
 
+        colour = None
+
+        # set colour to whichever colour was detected
         if self.greenSensor.getValue() > 0.99:
-            colour = 1
+
+            print( "green box detected" )
+            colour = Colour.GREEN
             
         if self.redSensor.getValue() > 0.99:
-            colour = 0
             
+            print( "red box detected" )
+            colour = Colour.RED
+            
+        # if we picked up the right colour then bring it back, otherwise continue the search
         if colour == self.colour:
-            self.setBehaviour( self.carryBoxHome )
- #       if colour != self.colour:
- #           self.setBehaviour( self.continueSearching)
+
+            self.schedule( 1000, lambda : self.setBehaviour( self.carryBoxHome ) )
+
+        else:
+
+            self.behaviour = self.continueSearching
             
+
     def carryBoxHome(self):
         
-        
-        if self.colour == 1:
-             
-            homeDirection = self.pos - self.greenCentre
-             
-        if self.colour == 0:
-             
-            homeDirection = self.pos - self.greenCentre
-      # This doesn't work, need to figure out how to point in the right direction and go home 
+        # get the direction of home
+        homeDirection = norm( self.home - self.pos )
             
-#        self.setWheelSpeeds(3.0, 1.0)
-         
- #       pointDirection = self.posHist[-1] - self.posHist[-2]
-        
+        # turnAmount is based on dot product of vel direction with home direction
+        # it is 2 when the vectors are 180 degrees apart and 0 when they are the same
+        turnAmount = 1 - np.dot( norm(self.vel), homeDirection )
 
-  #      point = np.array([norm(self.vel)[0], norm(self.vel)[2]])
-   #     home = np.array([norm(homeDirection)[0], norm(homeDirection)[2]])
-        
-        
-    #    print(np.tensordot(home, point, axes = 1))
-    
-     #   if np.tensordot(home, point, axes = 1) < -0.99:
-             
-      #      self.setWheelSpeeds(2, 2)
+        # drive home
+        self.setWheelSpeeds(5.0 - turnAmount * 4.0, 5.0 + turnAmount * 4.0)
+
+        # if we are home then stop
+        if np.linalg.norm( self.home - self.pos ) < 0.2:
+
+            self.behaviour = self.stop
 
          
-                  
-        
+    def continueSearching(self):
+
+        print("continueSearching not yet implemented")
 
 
     def mainLoop(self):
@@ -316,7 +303,6 @@ class Jasmine(Robot):
             self.updatePositionAndVelocity()
             self.updateDistance()
             self.updateSchedule()
-
 
             # call the current behaviour function
             self.behaviour()
