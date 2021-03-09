@@ -181,9 +181,10 @@ class Jasmine(Robot):
 
         # update received data
         if self.receiver.getQueueLength() > 0:
+
             data = self.receiver.getData()
-            vector = struct.unpack("fff", data)
-            np.append(self.receivedData, np.asarray(vector))
+            vector = np.asarray(struct.unpack("fff", data))
+            self.receivedData.append(vector)
 
 
 
