@@ -41,7 +41,7 @@ class Jasmine(Robot):
         self.clawAngle        = 0.0
         self.simTime          = self.timestep
         self.scheduleTuples   = []
-        self.behaviour        = lambda : self.turnToDirection( np.array([0, 0, -1]) )
+        self.behaviour        = self.startSpin
         self.greenLevel       = 0.0
         self.redLevel         = 0.0
         self.boxFirstEdgeTime = 0
@@ -187,13 +187,36 @@ class Jasmine(Robot):
     # and control what the robot does at different parts of the process
 
 
-    def turnToDirection(self, direction):
+    def turnToDirection(self, direction, nextBehaviour = lambda : None):
 
         # get a value representing the amount we still need to turn
         turnAmount = np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) ** 0.5 * 20
 
         # set the wheel speeds based on this value
         self.setWheelSpeeds( turnAmount, -turnAmount )
+
+        # when we have turned, start the next behaviour
+        if abs( turnAmount ) < 0.01:
+            self.behaviour = nextBehaviour
+
+
+    def goToPoint(self, destination, nextBehaviour = lambda : None):
+
+        # get the direction to the destination, making sure it's in the horizontal plane
+        direction    = destination - self.pos
+        direction[1] = 0
+
+        # get a value representing the amount we still need to turn
+        turnAmount = np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) ** 0.5 * 20
+
+        # set the wheel speeds based on this value
+        self.setWheelSpeeds( 8.0+turnAmount, 8.0-turnAmount )
+
+        print( np.linalg.norm( direction ) )
+
+        # when we have arrived, start the next behaviour
+        if np.linalg.norm( direction ) < 0.01:
+            self.behaviour = nextBehaviour
 
 
     def startSpin(self):
