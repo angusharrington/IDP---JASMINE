@@ -4,8 +4,9 @@ PROTO JASMINE_v3 [
   # field SFFloat    bodyMass     0.8
 ]
 {
+Robot {
   translation IS translation
-  rotaton IS rotation
+  rotation IS rotation
   children [
     LightSensor {
       translation 0.18 0.1 -0.002
