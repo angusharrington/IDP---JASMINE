@@ -8,6 +8,7 @@ Robot {
   translation IS translation
   rotation IS rotation
   children [
+
     LightSensor {
       translation 0.18 0.1 -0.002
       rotation 0 0 1 -1.5707953071795862

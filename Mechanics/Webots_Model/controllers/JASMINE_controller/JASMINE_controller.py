@@ -79,6 +79,8 @@ class Jasmine(Robot):
         self.leftDistanceSensor  = self.getDevice( "DistanceSensorLEFT"  )
         self.greenSensor         = self.getDevice( "lightSensorGREEN"    )
         self.redSensor           = self.getDevice( "lightSensorRED"      )
+        self.emitter            = self.getDevice( "emitter"             )
+        self.receiver            = self.getDevice( "receiver"            )
 
         # enable the sensors
         self.gps.enable( self.timestep )
@@ -88,6 +90,8 @@ class Jasmine(Robot):
         self.leftDistanceSensor.enable( self.timestep )
         self.greenSensor.enable( self.timestep )
         self.redSensor.enable( self.timestep )
+        self.receiver.enable( self.timestep )
+        self.emitter.enable( self.timestep )
 
         # code for single distance sensor robot
         # self.distanceSensor = self.getDevice( "DistanceSensorFront" )
@@ -169,12 +173,10 @@ class Jasmine(Robot):
         self.prev2vel[-1] = np.linalg.norm(self.vel)
 
         # from the difference in gps readings, calculate the angle we are facing and update the forward vector
-        gpsDifference = np.array( self.gpsOffset.getValues() ) - self.pos
+        gpsDifference = np.array( [self.gpsOffset.getValues()[0], self.gpsOffset.getValues()[2]]) - np.array([self.pos[0], self.pos[2]])
 
-        self.angle = np.arctan2( gpsDifference[2], gpsDifference[0] )
+        self.angle = np.arctan2( gpsDifference[1], gpsDifference[0] )
         self.forward = norm( gpsDifference )
-
-        print(self.forward)
 
 
     def updateDistance(self):
@@ -198,22 +200,33 @@ class Jasmine(Robot):
 
         # set motors to spin
         self.setWheelSpeeds( 1.0, -1.0 )
+        print(self.forward)
 
         # start the spinning behaviour
         self.behaviour = self.spinAndFindBox
 
-    def LocationsRoute(self):
+    def locationsRoute(self):
     
         # for red robot
         
-        PointsOrder = np.array([[0, 0.05, 0], [0.8, 0.05, 0], [0.8, 0.05, 0.8], [0, 0.05, 0.8], [-0.8, 0.05, 0.8]])
+        PointsOrder = np.array([[0, 0], [0.8, 0], [0.8, 0.8], [0, 0.8], [-0.8, 0.8]])
 
         # for green robot
-        #PointsOrder = np.array([[0.8, 0.05, -0.8], [0, 0.05, -0.8], [-0.8, 0.05, -0.8], [-0.8, 0.05, 0]])
+        # PointsOrder = np.array([[0.8, -0.8], [0,-0.8], [-0.8,-0.8], [-0.8,0]])
         
         for i in PointsOrder:
         
-            self.behaviour = self.goToPoint(i)
+            self.setBehaviour(self.goToPoint(i))
+            
+    def goToPoint(self, point):
+    
+        direction = point - np.array([self.pos[0], self.pos[2]])
+        normDirection = norm( direction )
+        
+        self.setWheelSpeeds( -1.0, 1.0 )
+        print("y0", abs(normDirection[0]-self.forward[0]))
+ #       if abs(normDirection[0]-self.forward[0])<0.01 :
+  #          self.setWheelSpeeds(5.0, 5.0)
 
 
     def spinAndFindBox(self):
@@ -225,7 +238,6 @@ class Jasmine(Robot):
         # check if the right distance sensor detected a downwards step
         if self.distances[-1, 1] - self.distances[-2,1] < -0.15:
 
-            print(1)
 
             # record the time that this happened
             self.boxFirstEdgeTime = self.simTime
@@ -233,7 +245,6 @@ class Jasmine(Robot):
         # check if the left distance sensor detected an upwards step
         if self.distances[-1, 0] - self.distances[-2, 0] > 0.15:
 
-            print(2)
 
             # start spinning in the opposite direction
             self.setWheelSpeeds( -1.0, 1.0 )
@@ -251,11 +262,11 @@ class Jasmine(Robot):
         self.behaviour = lambda : None
 
         # open the claw ready to get the box
-        # self.clawMotor.setPosition( 1.8 )
+        self.clawMotor.setPosition( 1.8 )
 
         # start to move forward and start the goToBox behaviour after the robot speed has settled
         self.setWheelSpeeds(5.0, 5.0)
-        self.schedule( 1000, lambda : self.setBehaviour( self.goToBox ) )
+        self.schedule( 500, lambda : self.setBehaviour( self.goToBox ) )
 
 
     def goToBox(self):
@@ -264,7 +275,7 @@ class Jasmine(Robot):
 
         if self.greenLevel > 0.99 or self.redLevel > 0.99:
 
-            self.behaviour = self.checkBox
+            self.schedule( 1000, lambda : self.setBehaviour( self.checkBox) )
 
 
     def checkBox(self):
@@ -315,6 +326,9 @@ class Jasmine(Robot):
 
          
     def continueSearching(self):
+
+        self.emitter.send(self.pos)
+        
 
         
         print("continueSearching not yet implemented")
