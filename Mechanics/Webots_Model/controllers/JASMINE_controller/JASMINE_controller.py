@@ -41,7 +41,7 @@ class Jasmine(Robot):
         self.clawAngle        = 0.0
         self.simTime          = self.timestep
         self.scheduleTuples   = []
-        self.behaviour        = self.startSpin
+        self.behaviour        = lambda : self.turnToDirection( np.array([0, 0, -1]) )
         self.greenLevel       = 0.0
         self.redLevel         = 0.0
         self.boxFirstEdgeTime = 0
@@ -171,10 +171,8 @@ class Jasmine(Robot):
         # from the difference in gps readings, calculate the angle we are facing and update the forward vector
         gpsDifference = np.array( self.gpsOffset.getValues() ) - self.pos
 
-        self.angle = np.arctan2( gpsDifference[2], gpsDifference[0] )
+        self.angle   = np.arctan2( gpsDifference[2], gpsDifference[0] )
         self.forward = norm( gpsDifference )
-
-        print(self.forward)
 
 
     def updateDistance(self):
@@ -189,9 +187,13 @@ class Jasmine(Robot):
     # and control what the robot does at different parts of the process
 
 
-    def turnToAngle(self, angle, behaviourWhenFinished=lambda : None):
+    def turnToDirection(self, direction):
 
-        pass
+        # get a value representing the amount we still need to turn
+        turnAmount = np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) ** 0.5 * 20
+
+        # set the wheel speeds based on this value
+        self.setWheelSpeeds( turnAmount, -turnAmount )
 
 
     def startSpin(self):
@@ -201,6 +203,7 @@ class Jasmine(Robot):
 
         # start the spinning behaviour
         self.behaviour = self.spinAndFindBox
+
 
     def LocationsRoute(self):
     
