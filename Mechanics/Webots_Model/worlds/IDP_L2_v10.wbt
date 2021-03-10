@@ -18,14 +18,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-<<<<<<< HEAD
-  orientation 0.9340044381598565 0.3458871843528835 -0.08943022530512296 5.868250613443417
-  position 0.15167159372156863 0.7391971199733542 1.791479379069099
-  follow "JASMINE_red"
-=======
-  orientation -0.8668022975919116 -0.48563335981253986 -0.11319901380563005 0.8719179196786021
-  position -0.4708759324802666 1.5251176385975522 1.6699566122479839
->>>>>>> d145a29630a1358504aa81fc8f174ce69aaa67a8
+  orientation 0.8488789436513754 -0.470883097472733 -0.24015338336115497 5.626275366312393
+  position 0.962419917617998 1.6545725500530826 2.6405972806488878
   followType "Mounted Shot"
 }
 Background {
@@ -43,15 +37,11 @@ target {
   name "target(9)"
 }
 target {
-  translation 0.357 0.05 0.3457
+  translation 0.167 0.05 0.2857
   name "target(8)"
 }
 target {
-<<<<<<< HEAD
-  translation 0.7867 0.05 0.1914
-=======
   translation 0.4767 0.05 -0.9486
->>>>>>> d145a29630a1358504aa81fc8f174ce69aaa67a8
   name "target(7)"
 }
 target {
@@ -59,7 +49,7 @@ target {
   name "target(6)"
 }
 target {
-  translation 0.0526032 0.05 0.571692
+  translation 0.0526032 0.05 0.771692
   colour 0 1 0
   name "target(5)"
 }
@@ -69,12 +59,8 @@ target {
   name "target(1)"
 }
 target {
-<<<<<<< HEAD
-  translation 0.8205 0.05 0.4842
-=======
-  translation 0.30121 0.120711 0.8142
-  rotation 0 0 1 -2.3561953071795863
->>>>>>> d145a29630a1358504aa81fc8f174ce69aaa67a8
+  translation -0.272605 0.156894 0.8142
+  rotation 0 0 -1 8.23753e-07
   colour 0 1 0
   name "target(2)"
 }
@@ -157,6 +143,15 @@ TexturedBackgroundLight {
   texture "empty_office"
 }
 JASMINE_v4 {
-  hidden rotation_9 -0.9774889099367536 -1.4391698070495282e-07 0.21098680278784393 1.5158897891376391e-05
-  translation 0 0.05 0.31
+  hidden rotation_9 -0.977488899409773 -1.4391697915505153e-07 0.21098685155869387 1.5158897891376391e-05
+  translation 0.75 0.05 0
+}
+JASMINE_v4 {
+  hidden rotation_9 -0.9774888979067539 -1.4391697893376007e-07 0.21098685852208693 1.5158897891376391e-05
+  translation -0.72 0.05 0.05
+  baseColor 0 1 0
+  name "JASMINE_red(1)"
+  red_or_green [
+    "green"
+  ]
 }

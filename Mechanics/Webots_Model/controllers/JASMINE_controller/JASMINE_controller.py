@@ -45,7 +45,7 @@ class Jasmine(Robot):
         self.clawAngle        = 0.0
         self.simTime          = self.timestep
         self.scheduleTuples   = []
-        self.behaviour        = self.startSpin
+        self.behaviour        = self.locationsRoute
         self.greenLevel       = 0.0
         self.redLevel         = 0.0
         self.boxFirstEdgeTime = None
@@ -335,12 +335,16 @@ class Jasmine(Robot):
         # close the claw in case it's open
         self.clawMotor.setPosition( 0 )
 
-        # a dict that contains all the points we need to search at
-        pointsOrder = { Colour.RED:   np.array([[0.8, 0, 0], [0.8, 0, 0.8], [0, 0, 0.8], [-0.8, 0, 0.8]]),
-                        Colour.GREEN: np.array([[0.8, 0, 0], [0.8, 0, 0.8], [0, 0, 0.8], [-0.8, 0, 0.8]]) }
+        # all the positions to spin around at
+        spinPositions = np.array( [[ 0.8, 0, 0], [ 0.8, 0,  0.8], [0, 0,  0.8], [-0.8, 0,  0.8],
+                                   [-0.8, 0, 0], [-0.8, 0, -0.8], [0, 0, -0.8], [ 0.8, 0, -0.8] ] )
+
+        # if its the green robot use the same array rotated 4 spaces along
+        if self.colour == Colour.GREEN:
+            spinPositions = np.roll( spinPositions, 4, axis=0 )
 
         # figure out where we have to go now
-        pointToGoTo        = pointsOrder[self.colour][self.pointsSearched]
+        pointToGoTo        = spinPositions[self.pointsSearched]
         directionToStartAt = self.directionCleared
         
         # start going to the next point
