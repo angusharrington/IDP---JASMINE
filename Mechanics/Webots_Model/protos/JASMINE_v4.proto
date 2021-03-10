@@ -96,7 +96,7 @@ Robot {
           ]
         }
         Transform {
-          translation -0.06 -0.03 0
+          translation -0.08 -0.03 0
           children [
             Shape {
               appearance PBRAppearance {
@@ -111,7 +111,36 @@ Robot {
           ]
         }
         Transform {
-          translation -0.06 -0.041 0
+          translation -0.08 -0.038 0
+          children [
+            DEF Ball Shape {
+              appearance PBRAppearance {
+                metalness 0
+              }
+              geometry Sphere {
+                radius 0.01
+                subdivision 2
+              }
+            }
+          ]
+        }
+        Transform {
+          translation 0.09 -0.03 0
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor IS baseColor
+                metalness 0
+              }
+              geometry Cylinder {
+                height 0.02
+                radius 0.01
+              }
+            }
+          ]
+        }
+        Transform {
+          translation 0.09 -0.038 0
           children [
             DEF Ball Shape {
               appearance PBRAppearance {
@@ -139,7 +168,7 @@ Robot {
       jointParameters HingeJointParameters {
         position 2.5253684986159427e-09
         axis 0 0 -1
-        anchor 0.05 -0.016 0.06
+        anchor 0.02 -0.016 0.06
       }
       device [
         DEF Wheel1 RotationalMotor {
@@ -148,7 +177,7 @@ Robot {
         }
       ]
       endPoint Solid {
-        translation 0.05000008740558263 -0.015993692754018136 0.05999999999997346
+        translation 0.02000008740558263 -0.015993692754018136 0.05999999999997346
         rotation 1 1.5414408722372822e-09 1.5414408131133853e-09 1.570796325166792
         children [
           DEF Wheel Shape {
@@ -172,7 +201,7 @@ Robot {
       jointParameters HingeJointParameters {
         position 2.525400603234157e-09
         axis 0 0 -1
-        anchor 0.05 -0.016 -0.06
+        anchor 0.02 -0.016 -0.06
       }
       device [
         DEF Wheel2 RotationalMotor {
@@ -181,7 +210,7 @@ Robot {
         }
       ]
       endPoint Solid {
-        translation 0.05000008740567706 -0.015993692754490675 -0.06000000000002613
+        translation 0.02000008740567706 -0.015993692754490675 -0.06000000000002613
         rotation 1 1.5408048436471513e-09 1.5408047277247079e-09 1.5707962818133199
         children [
           USE Wheel

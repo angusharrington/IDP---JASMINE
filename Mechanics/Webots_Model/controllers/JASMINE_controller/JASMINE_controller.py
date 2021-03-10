@@ -185,21 +185,24 @@ class Jasmine(Robot):
         self.angle   = np.arctan2( gpsDifference[2], gpsDifference[0] )
         self.forward = norm( gpsDifference )
 
-        # send other robot position, velocity and forward direction for collision avoidance (ignoring y co-ordinate)
+
+    def updateRecieverEmitter(self):
+
+        # send other robot position and velocity for collision avoidance (ignoring y co-ordinate)
         posVelAndFor = struct.pack('ffffff', self.pos[0], self.pos[2], self.vel[0], self.vel[2], self.forward[0], self.forward[2])
         self.emitter.send(posVelAndFor)
-
 
         # update received data
         if self.receiver.getQueueLength() > 0:
             
             data = self.receiver.getData()
+
             if sys.getsizeof(data) == 57:
+
                 recPosAndVel = np.asarray(struct.unpack("ffffff", data))
-                # self.otherRobot = [[position], [velocity], [forward]]
                 self.otherRobot = np.array([[recPosAndVel[0], recPosAndVel[1]], [recPosAndVel[2], recPosAndVel[3]], [recPosAndVel[4], recPosAndVel[5]]])
 
-            if sys.getsizeof(data) == 45:
+            elif sys.getsizeof(data) == 45:
 
                 vector = np.asarray(struct.unpack("fff", data))
                 self.receivedData = np.append(self.receivedData, vector)
@@ -295,11 +298,14 @@ class Jasmine(Robot):
         # get a value representing the amount we still need to turn
         turnAmount = np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) ** 0.5 * 20
 
+        # get a baseSpeed value - slow if we're close to the destination but not facing it and otherwise fast
+        baseSpeed = 8.0 - min( abs(turnAmount), 8 )
+
         # set the wheel speeds based on this value
-        self.setWheelSpeeds( 8.0+turnAmount, 8.0-turnAmount )
+        self.setWheelSpeeds( baseSpeed+turnAmount, baseSpeed-turnAmount )
 
         # if we're very close to the destination then we have arrived
-        arrived = np.linalg.norm( direction ) < 0.04
+        arrived = np.linalg.norm( direction ) < 0.02
 
         # if we want to face a certain direction once we arrive then start the turnToDirection behaviour
         if arrived and directionOnceArrived is not None:
@@ -313,7 +319,7 @@ class Jasmine(Robot):
     def startSpin(self):
 
         # set motors to spin
-        self.setWheelSpeeds( 1.0, -1.0 )
+        self.setWheelSpeeds( 2.0, -2.0 )
 
         # start the spinning behaviour
         self.behaviour = self.spinAndFindBox
@@ -361,7 +367,7 @@ class Jasmine(Robot):
             self.directionCleared = self.forward
 
             # start spinning in the opposite direction
-            self.setWheelSpeeds( -1.0, 1.0 )
+            self.setWheelSpeeds( -2.0, 2.0 )
             
             # calculate how far back to rotate
             rotationTime = ( self.simTime - self.boxFirstEdgeTime ) / 2
@@ -380,7 +386,7 @@ class Jasmine(Robot):
         self.clawMotor.setPosition( 1.8 )
 
         # start to move forward and start the goToBox behaviour after the robot speed has settled
-        self.setWheelSpeeds(5.0, 5.0)
+        self.setWheelSpeeds( 8.0, 8.0 )
         self.schedule( 500, lambda : self.setBehaviour( self.goToBox ) )
 
 
@@ -390,7 +396,8 @@ class Jasmine(Robot):
 
         if self.greenLevel > 0.99 or self.redLevel > 0.99:
 
-            self.schedule( 500, lambda : self.setBehaviour( self.checkBox ) )
+            self.schedule( 400, lambda : self.setBehaviour( self.checkBox ) )
+
 
     
     def checkBox(self):
@@ -463,6 +470,7 @@ class Jasmine(Robot):
             self.updatePositionAndVelocity()
             self.updateDistance()
             self.updateSchedule()
+            self.updateRecieverEmitter()
 
             # call the current behaviour function
             self.behaviour()
