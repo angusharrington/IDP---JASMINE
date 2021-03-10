@@ -419,9 +419,9 @@ class Jasmine(Robot):
         # open the claw ready to get the box
         self.clawMotor.setPosition( 1.8 )
 
-        # start to move forward and start the goToBox behaviour after the robot speed has settled
+        # start to move forward and start the goToBox behaviour
         self.setWheelSpeeds( 8.0, 8.0 )
-        self.schedule( 500, lambda : self.setBehaviour( self.goToBox ) )
+        self.behaviour = self.goToBox
 
 
     def goToBox(self):
@@ -431,7 +431,7 @@ class Jasmine(Robot):
         if self.greenLevel > 0.99 or self.redLevel > 0.99:
 
             self.behaviour = lambda : None
-            self.schedule( 400, lambda : self.setBehaviour( self.checkBox ) )
+            self.schedule( 200, lambda : self.setBehaviour( self.checkBox ) )
 
 
     def checkBox(self):
