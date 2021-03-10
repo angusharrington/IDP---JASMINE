@@ -318,17 +318,20 @@ class Jasmine(Robot):
         redSquare = [[0.2, 0.6], [0.2, 0.2], [-0.2, 0.2], [-0.2, 0.6]]
 
         # position of nose in 0.1 seconds
-        positionNext = self.pos + self.forward*0.1*norm(self.vel) + 0.22*self.forward
+        positionNext = self.pos + self.forward*0.2*norm(self.vel) + 0.22*self.forward
         positionNext = np.array([positionNext[0], positionNext[2]])
-        xzpos = np.array([self.pos[0], self.pos[1]])
+        xzposNose = 0.3*self.forward + self.pos
+        xzposNose = np.array([xzposNose[0], xzposNose[2]])
 
-        if self.intersect(positionNext, greenSquare) is True and self.goingHome is False and self.intersect(xzpos, greenSquare) is False:
+
+        print(self.goingHome)
+        if self.intersect(positionNext, greenSquare) is True and self.goingHome is False and self.intersect(xzposNose, greenSquare) is False:
             self.setWheelSpeeds(2, -2) 
             self.schedule(0.4, self.setWheelSpeeds(5, 5))
             self.schedule(0.5, self.setWheelSpeeds(0, 0))
             self.behaviour = lambda : self.goToPoint( destination, self.startSpin, directionOnceArrived )
 
-        if self.intersect(positionNext, redSquare) is True and self.goingHome is False and self.intersect(xzpos, redSquare) is False:
+        if self.intersect(positionNext, redSquare) is True and self.goingHome is False and self.intersect(xzposNose, redSquare) is False:
             self.setWheelSpeeds(2, -2)
             self.schedule(0.4, self.setWheelSpeeds(5, 5))
             self.schedule(0.5, self.setWheelSpeeds(0, 0))
@@ -336,7 +339,7 @@ class Jasmine(Robot):
 
         # if we're within the tolerance distance to the destination then we have arrived
         arrived = np.linalg.norm( direction ) < tolerance
-        self.goingHome = False
+        
         # if we want to face a certain direction once we arrive then start the turnToDirection behaviour
         if arrived and directionOnceArrived is not None:
             self.behaviour = lambda : self.turnToDirection( directionOnceArrived, nextBehaviour )
@@ -488,10 +491,10 @@ class Jasmine(Robot):
             
         # if we picked up the right colour then bring it back, otherwise continue the search
         if colour == self.colour:
-
+            self.goingHome = True
             self.behaviour = lambda : None
             self.schedule( 500, lambda : self.setBehaviour( lambda : self.goToPoint( self.home, self.releaseBlock, tolerance=0.2 ) ) )
-            self.goingHome = True
+            
 
         else:
 
@@ -505,6 +508,7 @@ class Jasmine(Robot):
         # lift the claw and reverse the motors
         self.clawMotor.setPosition( 1.8 )
         self.setWheelSpeeds( -7.0, -7.0 )
+        self.goingHome = False
 
         # schedule locationsRoute and set behaviour to nothing
         self.behaviour = lambda : None
