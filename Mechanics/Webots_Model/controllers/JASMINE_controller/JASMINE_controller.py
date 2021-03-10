@@ -321,15 +321,6 @@ class Jasmine(Robot):
             self.behaviour = nextBehaviour
 
 
-    def startSpin(self):
-
-        # set motors to spin
-        self.setWheelSpeeds( 2.0, -2.0 )
-
-        # start the spinning behaviour
-        self.behaviour = self.spinAndFindBox
-
-
     def locationsRoute(self):
 
         # close the claw in case it's open
@@ -349,6 +340,15 @@ class Jasmine(Robot):
         
         # start going to the next point
         self.behaviour = lambda : self.goToPoint( pointToGoTo, self.startSpin, directionToStartAt )
+
+
+    def startSpin(self):
+
+        # set motors to spin
+        self.setWheelSpeeds( 2.0, -2.0 )
+
+        # start the spinning behaviour
+        self.behaviour = self.spinAndFindBox
 
 
     def spinAndFindBox(self):
@@ -421,17 +421,21 @@ class Jasmine(Robot):
 
         # start to move forward and start the goToBox behaviour
         self.setWheelSpeeds( 8.0, 8.0 )
-        self.behaviour = self.goToBox
+        self.behaviour = lambda x=self.simTime : self.goToBox(x)
 
 
-    def goToBox(self):
+    def goToBox(self, startTime):
 
         # when we detect light on one of the light sensors we have reached the box
-
         if self.greenLevel > 0.99 or self.redLevel > 0.99:
 
             self.behaviour = lambda : None
             self.schedule( 200, lambda : self.setBehaviour( self.checkBox ) )
+
+        # if we have been driving for too long then give up
+        if self.simTime - startTime > 2500:
+
+            self.locationsRoute()
 
 
     def checkBox(self):
