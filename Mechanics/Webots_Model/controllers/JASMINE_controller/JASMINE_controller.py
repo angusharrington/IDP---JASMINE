@@ -444,9 +444,9 @@ class Jasmine(Robot):
         centre = self.otherRobot[0]
         ahead = self.otherRobot[2]
 
-        gpsToFront = 0.22
+        gpsToFront = 0.3
         gpsToSide  = 0.085
-        gpsToBack  = 0.1
+        gpsToBack  = 0.15
 
 
         fourCorners = [[centre + gpsToSide*(rot.dot(ahead)) - ahead*gpsToBack], [centre - gpsToSide*(rot.dot(ahead)) - ahead*gpsToBack], [centre + gpsToSide*(rot.dot(ahead)) + ahead*gpsToFront], [centre - gpsToSide*(rot.dot(ahead)) + ahead*gpsToFront]]
