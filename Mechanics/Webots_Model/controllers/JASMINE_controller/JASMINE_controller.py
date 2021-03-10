@@ -322,14 +322,15 @@ class Jasmine(Robot):
         # position of nose in 0.1 seconds
         positionNext = self.pos + self.forward*0.1*norm(self.vel) + 0.22*self.forward
         positionNext = np.array([positionNext[0], positionNext[2]])
+        xzpos = np.array([self.pos[0], self.pos[1]])
 
-        if self.intersect(positionNext, greenSquare) is True:
+        if self.intersect(positionNext, greenSquare) is True and destination != self.home and self.intersect(xzpos, greenSquare) is False:
             self.setWheelSpeeds(2, -2) 
             self.schedule(0.4, self.setWheelSpeeds(5, 5))
             self.schedule(0.5, self.setWheelSpeeds(0, 0))
             self.behaviour = lambda : self.goToPoint( destination, self.startSpin, directionOnceArrived )
 
-        if self.intersect(positionNext, redSquare) is True:
+        if self.intersect(positionNext, redSquare) is True and destination != self.home and self.intersect(xzpos, redSquare) is False:
             self.setWheelSpeeds(2, -2)
             self.schedule(0.4, self.setWheelSpeeds(5, 5))
             self.schedule(0.5, self.setWheelSpeeds(0, 0))
