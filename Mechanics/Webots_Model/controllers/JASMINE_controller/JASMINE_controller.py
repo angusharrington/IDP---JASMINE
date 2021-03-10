@@ -51,7 +51,7 @@ class Jasmine(Robot):
         self.receivedData     = np.array([])
         self.otherRobot       = np.array([[0, 0], [0, 0]])
         self.pointsSearched   = 0 # number of points in the grid that we have spun around completely and cleared
-        self.directionCleared = 0 # direction that we have cleared up to on the current point - starting from 1, 0, 0
+        self.directionCleared = np.array( [1,0,0] ) # direction that we have cleared up to on the current point - starting from 1, 0, 0
 
         # Robot dependant variables
         if sys.argv[1] == "red":
@@ -306,12 +306,15 @@ class Jasmine(Robot):
         # set the wheel speeds based on this value
         self.setWheelSpeeds( 8.0+turnAmount, 8.0-turnAmount )
 
-        # if we want to face a certain direction once we arrive then start the 
-        if directionOnceArrived is not None:
+        # if we're very close to the destination then we have arrived
+        arrived = np.linalg.norm( direction ) < 0.01
+
+        # if we want to face a certain direction once we arrive then start the turnToDirection behaviour
+        if arrived and directionOnceArrived is not None:
             self.behaviour = lambda : self.turnToDirection( directionOnceArrived, nextBehaviour )
 
         # when we have arrived, start the next behaviour
-        if np.linalg.norm( direction ) < 0.01:
+        elif arrived:
             self.behaviour = nextBehaviour
 
 
@@ -326,15 +329,19 @@ class Jasmine(Robot):
 
     def locationsRoute(self):
 
+        # close the claw in case it's open
+        self.clawMotor.setPosition( 0 )
+
         # a dict that contains all the points we need to search at
-        pointsOrder = { Colour.RED:   np.array([[0, 0], [0.8, 0], [0.8, 0.8], [0, 0.8], [-0.8, 0.8]]),
-                        Colour.GREEN: np.array([[0, 0], [0.8, 0], [0.8, 0.8], [0, 0.8], [-0.8, 0.8]]) }
+        pointsOrder = { Colour.RED:   np.array([[0, 0, 0], [0.8, 0, 0], [0.8, 0, 0.8], [0, 0, 0.8], [-0.8, 0, 0.8]]),
+                        Colour.GREEN: np.array([[0, 0, 0], [0.8, 0, 0], [0.8, 0, 0.8], [0, 0, 0.8], [-0.8, 0, 0.8]]) }
 
         # figure out where we have to go now
         pointToGoTo        = pointsOrder[self.colour][self.pointsSearched]
         directionToStartAt = self.directionCleared
         
-        self.behaviour = lambda : self.goToPoint( point, startSpin, directionToStartAt )
+        # start going to the next point
+        self.behaviour = lambda : self.goToPoint( pointToGoTo, self.startSpin, directionToStartAt )
 
 
     def spinAndFindBox(self):
@@ -351,6 +358,9 @@ class Jasmine(Robot):
             
         # check if the left distance sensor detected an upwards step
         if self.distances[-1, 0] - self.distances[-2, 0] > 0.15:
+
+            # we have now cleared the angle up to this direction
+            self.directionCleared = self.forward
 
             # start spinning in the opposite direction
             self.setWheelSpeeds( -1.0, 1.0 )
@@ -406,11 +416,14 @@ class Jasmine(Robot):
         # if we picked up the right colour then bring it back, otherwise continue the search
         if colour == self.colour:
 
-            self.schedule( 1000, lambda : self.setBehaviour( lambda : self.goToPoint( self.home, self.stop ) ) )
+            self.schedule( 1000, lambda : self.setBehaviour( lambda : self.goToPoint( self.home, self.releaseBlock ) ) )
 
         else:
 
+            # if its the wrong colour start releaseBlock and schedule continueSearching 
             self.behaviour = self.releaseBlock
+
+            self.schedule( 2000, lambda : self.setBehaviour(self.continueSearching) )
 
 
     def releaseBlock(self):
@@ -419,8 +432,15 @@ class Jasmine(Robot):
         self.clawMotor.setPosition( 1.8 )
         self.setWheelSpeeds( -3.0, -3.0 )
 
+        # schedule locationsRoute and set behaviour to nothing
+        self.behaviour = lambda : None
+        self.schedule( 2000, self.locationsRoute )
+
          
     def continueSearching(self):
+
+        # close the claw
+        self.clawMotor.setPosition( 0 )
 
         # Note 0.1 chosen arbitrarily, needs to be made more accurate
         blockLoc = self.pos+self.forward*0.1
@@ -429,7 +449,7 @@ class Jasmine(Robot):
         message = struct.pack('fff', blockLoc[0], blockLoc[1], blockLoc[2])
         self.emitter.send(message)
         
-        print("continueSearching not yet implemented")
+        self.locationsRoute()
 
 
     def mainLoop(self):

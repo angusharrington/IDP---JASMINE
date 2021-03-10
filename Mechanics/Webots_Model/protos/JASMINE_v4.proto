@@ -201,7 +201,7 @@ Robot {
       device [
         RotationalMotor {
           name "ClawMotor"
-          controlPID 2 1 0
+          controlPID 3 1 0
         }
       ]
       endPoint Solid {
