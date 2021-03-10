@@ -48,7 +48,7 @@ class Jasmine(Robot):
         self.behaviour        = self.startSpin
         self.greenLevel       = 0.0
         self.redLevel         = 0.0
-        self.boxFirstEdgeTime = 0
+        self.boxFirstEdgeTime = None
         self.receivedData     = np.array([])
         self.otherRobot       = np.array([[0, 0], [0, 0], [0, 0]])
         self.pointsSearched   = 0 # number of points in the grid that we have spun around completely and cleared
@@ -283,7 +283,7 @@ class Jasmine(Robot):
     def turnToDirection(self, direction, nextBehaviour = lambda : None):
 
         # get a value representing the amount we still need to turn
-        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 100, -4, 4 )
+        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 30, -4, 4 )
 
         # set the wheel speeds based on this value
         self.setWheelSpeeds( turnAmount, -turnAmount )
@@ -300,7 +300,7 @@ class Jasmine(Robot):
         direction[1] = 0
 
         # get a value representing the amount we still need to turn
-        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 100, -4, 4 )
+        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 30, -4, 4 )
 
         # get a baseSpeed value - slow if we're close to the destination but not facing it and otherwise fast
         baseSpeed = 8.0 - min( abs(turnAmount) * 10 * (np.linalg.norm(direction)<0.1),  8 )
@@ -375,8 +375,8 @@ class Jasmine(Robot):
             objLoc = self.pos + np.array([forwardDisp[0], 0, forwardDisp[1]]) + np.array([side[0], 0, side[1]])*0.07
 
             
-        # check if the left distance sensor detected an upwards step
-        if self.distances[-1, 0] - self.distances[-2, 0] > 0.15:
+        # check if the left distance sensor detected an upwards step and we already detected a step from the other sensor
+        if self.distances[-1, 0] - self.distances[-2, 0] > 0.15 and self.boxFirstEdgeTime is not None:
 
             # we have now cleared the angle up to this direction
             self.directionCleared = self.forward
@@ -386,6 +386,9 @@ class Jasmine(Robot):
             
             # calculate how far back to rotate
             rotationTime = ( self.simTime - self.boxFirstEdgeTime ) / 2
+
+            # clear the boxFirstEdgeTime as we are done with it
+            self.boxFirstEdgeTime = None
 
             # after a time of rotationTime, call self.startBoxApproach
             self.schedule( rotationTime, self.startBoxApproach )
