@@ -299,6 +299,8 @@ class Jasmine(Robot):
 
 
     def goToPoint(self, destination, nextBehaviour = lambda : None, directionOnceArrived = None, tolerance = 0.02):
+    
+
 
         # get the direction to the destination, making sure it's in the horizontal plane
         direction    = destination - self.pos
@@ -312,6 +314,26 @@ class Jasmine(Robot):
 
         # set the wheel speeds based on this value
         self.setWheelSpeeds( baseSpeed+turnAmount, baseSpeed-turnAmount )
+
+        # Sometimes the robot charges through a square and pushes out all blocks
+        greenSquare = [[0.2, -0.6], [0.2, -0.2], [-0.2, -0.2], [-0.2, -0.6]]
+        redSquare = [[0.2, 0.6], [0.2, 0.2], [-0.2, 0.2], [-0.2, 0.6]]
+
+        # position of nose in 0.1 seconds
+        positionNext = self.pos + self.forward*0.1*norm(self.vel) + 0.22*self.forward
+        positionNext = np.array([positionNext[0], positionNext[2]])
+
+        if self.intersect(positionNext, greenSquare) is True:
+            self.setWheelSpeeds(2, -2) 
+            self.schedule(0.4, self.setWheelSpeeds(5, 5))
+            self.schedule(0.5, self.setWheelSpeeds(0, 0))
+            self.behaviour = lambda : self.goToPoint( destination, self.startSpin, directionOnceArrived )
+
+        if self.intersect(positionNext, redSquare) is True:
+            self.setWheelSpeeds(2, -2)
+            self.schedule(0.4, self.setWheelSpeeds(5, 5))
+            self.schedule(0.5, self.setWheelSpeeds(0, 0))
+            self.behaviour = lambda : self.goToPoint( destination, self.startSpin, directionOnceArrived )
 
         # if we're within the tolerance distance to the destination then we have arrived
         arrived = np.linalg.norm( direction ) < tolerance
@@ -342,10 +364,7 @@ class Jasmine(Robot):
         # figure out where we have to go now
         pointToGoTo        = spinPositions[self.pointsSearched]
         directionToStartAt = self.directionCleared
-        self.inTransit = True
 
-        self.forSquareAvoid1 = directionToStartAt
-        self.forSquareAvoid2 = pointToGoTo
 
         # start going to the next point
         self.behaviour = lambda : self.goToPoint( pointToGoTo, self.startSpin, directionToStartAt )
@@ -405,12 +424,15 @@ class Jasmine(Robot):
 
 
     def shouldGetBox(self):
-            
+
+        # 90 degree CW matrix   
         rot = np.array([[0, -1], [1, 0]])
         straight = norm(np.array([self.forward[0], self.forward[2]]))
         side = rot.dot(straight)
         forwardDisp = straight*(self.distances[-1, 1]+0.25)
         objLoc = self.pos + np.array([forwardDisp[0], 0, forwardDisp[1]]) + np.array([side[0], 0, side[1]])*0.07
+
+        # regions
         greenSquare = [[0.2, -0.6], [0.2, -0.2], [-0.2, -0.2], [-0.2, -0.6]]
         redSquare = [[0.2, 0.6], [0.2, 0.2], [-0.2, 0.2], [-0.2, 0.6]]
         arena = [[1.15, 1.15], [1.15, -1.15], [-1.15, -1.15], [-1.15, 1.15]]
@@ -476,32 +498,6 @@ class Jasmine(Robot):
             # if its the wrong colour call releaseBlock 
             self.releaseBlock()
 
-    def avoidSquares (self):
-    
-    # sometimes the robots path invlolves going going through a square pushing blocks out of it
-
-        # check if this is going to happen
-        if self.inTransit is False:
-            return
-
-        greenSquare = [[0.2, -0.6], [0.2, -0.2], [-0.2, -0.2], [-0.2, -0.6]]
-        redSquare = [[0.2, 0.6], [0.2, 0.2], [-0.2, 0.2], [-0.2, 0.6]]
-
-        # position of nose in 0.1 seconds
-        positionNext = self.pos + self.forward*0.1*norm(self.vel) + 0.22*self.forward
-        positionNext = np.array([positionNext[0], positionNext[2]])
-
-        if self.intersect(positionNext, greenSquare) is True:
-            self.setWheelSpeeds(2, -2) 
-            self.schedule(0.4, self.setWheelSpeeds(5, 5))
-            self.schedule(0.5, self.setWheelSpeeds(0, 0))
-            self.behaviour = lambda : self.goToPoint( self.forSquareAvoid2, self.startSpin, self.forSquareAvoid1 )
-
-        if self.intersect(positionNext, redSquare) is True:
-            self.setWheelSpeeds(2, -2)
-            self.schedule(0.4, self.setWheelSpeeds(5, 5))
-            self.schedule(0.5, self.setWheelSpeeds(0, 0))
-            self.behaviour = lambda : self.goToPoint( self.forSquareAvoid2, self.startSpin, self.forSquareAvoid1 )
         
 
     def releaseBlock(self):
