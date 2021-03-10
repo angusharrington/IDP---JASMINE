@@ -283,7 +283,7 @@ class Jasmine(Robot):
     def turnToDirection(self, direction, nextBehaviour = lambda : None):
 
         # get a value representing the amount we still need to turn
-        turnAmount = np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) ** 0.5 * 20
+        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 100, -4, 4 )
 
         # set the wheel speeds based on this value
         self.setWheelSpeeds( turnAmount, -turnAmount )
@@ -300,10 +300,10 @@ class Jasmine(Robot):
         direction[1] = 0
 
         # get a value representing the amount we still need to turn
-        turnAmount = np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) ** 0.5 * 20
+        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 100, -4, 4 )
 
         # get a baseSpeed value - slow if we're close to the destination but not facing it and otherwise fast
-        baseSpeed = 8.0 - min( abs(turnAmount), 8 )
+        baseSpeed = 8.0 - min( abs(turnAmount) * 10 * (np.linalg.norm(direction)<0.1),  8 )
 
         # set the wheel speeds based on this value
         self.setWheelSpeeds( baseSpeed+turnAmount, baseSpeed-turnAmount )
@@ -432,11 +432,11 @@ class Jasmine(Robot):
 
         # lift the claw and reverse the motors
         self.clawMotor.setPosition( 1.8 )
-        self.setWheelSpeeds( -3.0, -3.0 )
+        self.setWheelSpeeds( -5.0, -5.0 )
 
         # schedule locationsRoute and set behaviour to nothing
         self.behaviour = lambda : None
-        self.schedule( 2000, self.locationsRoute )
+        self.schedule( 1400, self.locationsRoute )
 
          
     def continueSearching(self):
