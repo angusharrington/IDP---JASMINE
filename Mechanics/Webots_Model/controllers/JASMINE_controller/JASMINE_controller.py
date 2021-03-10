@@ -66,7 +66,6 @@ class Jasmine(Robot):
             self.colour = Colour.GREEN
             self.home   = greenCentre
 
-
         # x, y and z coords for convenience
         self.x, self.y, self.z = self.pos
 
@@ -212,6 +211,7 @@ class Jasmine(Robot):
                 vector = np.asarray(struct.unpack("fff", data))
                 self.receivedData = np.append(self.receivedData, vector)
 
+
     # function that tells you if a point lies in a region
     def intersect(self, point, poly):
 
@@ -284,7 +284,7 @@ class Jasmine(Robot):
     def turnToDirection(self, direction, nextBehaviour = lambda : None):
 
         # get a value representing the amount we still need to turn
-        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 30, -4, 4 )
+        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 50, -7, 7 )
 
         # set the wheel speeds based on this value
         self.setWheelSpeeds( turnAmount, -turnAmount )
@@ -365,10 +365,11 @@ class Jasmine(Robot):
             return
 
         # check if the right distance sensor detected a downwards step
-        if self.distances[-1, 1] - self.distances[-2,1] < -0.15:
+        if self.distances[-1, 1] - self.distances[-2,1] < -0.05:
 
             # record the time that this happened
             self.boxFirstEdgeTime = self.simTime
+
             rot = np.array([[0, -1], [1, 0]])
             straight = norm(np.array([self.forward[0], self.forward[2]]))
             side = rot.dot(straight)
@@ -385,7 +386,7 @@ class Jasmine(Robot):
 
             
         # check if the left distance sensor detected an upwards step and we already detected a step from the other sensor
-        if self.distances[-1, 0] - self.distances[-2, 0] > 0.15 and self.boxFirstEdgeTime is not None and self.inRightPlace is True:
+        if self.distances[-1, 0] - self.distances[-2, 0] > 0.05 and self.boxFirstEdgeTime is not None:
 
             # we have now cleared the angle up to this direction
             self.directionCleared = self.forward
@@ -402,7 +403,6 @@ class Jasmine(Robot):
 
             # after a time of rotationTime, call self.startBoxApproach
             self.schedule( rotationTime, self.startBoxApproach )
-
 
 
     def startBoxApproach(self):
@@ -428,7 +428,6 @@ class Jasmine(Robot):
             self.schedule( 400, lambda : self.setBehaviour( self.checkBox ) )
 
 
-    
     def checkBox(self):
 
         # stop the robot and close the claw
@@ -452,25 +451,23 @@ class Jasmine(Robot):
         if colour == self.colour:
 
             self.behaviour = lambda : None
-            self.schedule( 1000, lambda : self.setBehaviour( lambda : self.goToPoint( self.home, self.releaseBlock, tolerance=0.2 ) ) )
+            self.schedule( 500, lambda : self.setBehaviour( lambda : self.goToPoint( self.home, self.releaseBlock, tolerance=0.2 ) ) )
 
         else:
 
-            # if its the wrong colour start releaseBlock and schedule continueSearching 
-            self.behaviour = self.releaseBlock
-
-            self.schedule( 2000, lambda : self.setBehaviour(self.continueSearching) )
+            # if its the wrong colour call releaseBlock 
+            self.releaseBlock()
 
 
     def releaseBlock(self):
 
         # lift the claw and reverse the motors
         self.clawMotor.setPosition( 1.8 )
-        self.setWheelSpeeds( -5.0, -5.0 )
+        self.setWheelSpeeds( -7.0, -7.0 )
 
         # schedule locationsRoute and set behaviour to nothing
         self.behaviour = lambda : None
-        self.schedule( 1400, self.locationsRoute )
+        self.schedule( 1000, self.locationsRoute )
 
          
     def continueSearching(self):
@@ -486,6 +483,15 @@ class Jasmine(Robot):
         self.emitter.send(message)
         
         self.locationsRoute()
+
+
+    def recoverFromStuck(self):
+
+        # sometimes the robot get stuck where the claw is on top of a block and the wheels are off the ground
+        if self.y > 0.055:
+
+            # just call releaseBlock to recover
+            self.releaseBlock()
 
 
     def mainLoop(self):
@@ -504,6 +510,9 @@ class Jasmine(Robot):
 
             # call the current behaviour function
             self.behaviour()
+
+            # recover from stuck in case we are
+            self.recoverFromStuck()
 
             # can print position and velocity
             # print( "pos: " + " ".join( ["%.2f" % v for v in self.pos] ) )
