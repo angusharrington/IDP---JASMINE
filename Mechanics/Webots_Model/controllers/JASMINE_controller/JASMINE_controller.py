@@ -50,7 +50,8 @@ class Jasmine(Robot):
         self.boxFirstEdgeTime = 0
         self.receivedData     = np.array([])
         self.otherRobot       = np.array([[0, 0], [0, 0]])
-
+        self.pointsSearched   = 0 # number of points in the grid that we have spun around completely and cleared
+        self.directionCleared = 0 # direction that we have cleared up to on the current point - starting from 1, 0, 0
 
         # Robot dependant variables
         if sys.argv[1] == "red":
@@ -268,9 +269,6 @@ class Jasmine(Robot):
                 self.setWheelSpeeds(0, 0)
 
 
-
-
-
     def updateDistance(self):
 
         # add the distance sensors reading to the distances list
@@ -296,7 +294,7 @@ class Jasmine(Robot):
             self.behaviour = nextBehaviour
 
 
-    def goToPoint(self, destination, nextBehaviour = lambda : None):
+    def goToPoint(self, destination, nextBehaviour = lambda : None, directionOnceArrived = None):
 
         # get the direction to the destination, making sure it's in the horizontal plane
         direction    = destination - self.pos
@@ -308,6 +306,10 @@ class Jasmine(Robot):
         # set the wheel speeds based on this value
         self.setWheelSpeeds( 8.0+turnAmount, 8.0-turnAmount )
 
+        # if we want to face a certain direction once we arrive then start the 
+        if directionOnceArrived is not None:
+            self.behaviour = lambda : self.turnToDirection( directionOnceArrived, nextBehaviour )
+
         # when we have arrived, start the next behaviour
         if np.linalg.norm( direction ) < 0.01:
             self.behaviour = nextBehaviour
@@ -317,23 +319,22 @@ class Jasmine(Robot):
 
         # set motors to spin
         self.setWheelSpeeds( 1.0, -1.0 )
-        #print(self.forward)
 
         # start the spinning behaviour
         self.behaviour = self.spinAndFindBox
 
-    def locationsRoute(self):
-    
-        # for red robot
-        
-        PointsOrder = np.array([[0, 0], [0.8, 0], [0.8, 0.8], [0, 0.8], [-0.8, 0.8]])
 
-        # for green robot
-        # PointsOrder = np.array([[0.8, -0.8], [0,-0.8], [-0.8,-0.8], [-0.8,0]])
+    def locationsRoute(self):
+
+        # a dict that contains all the points we need to search at
+        pointsOrder = { Colour.RED:   np.array([[0, 0], [0.8, 0], [0.8, 0.8], [0, 0.8], [-0.8, 0.8]]),
+                        Colour.GREEN: np.array([[0, 0], [0.8, 0], [0.8, 0.8], [0, 0.8], [-0.8, 0.8]]) }
+
+        # figure out where we have to go now
+        pointToGoTo        = pointsOrder[self.colour][self.pointsSearched]
+        directionToStartAt = self.directionCleared
         
-        for i in PointsOrder:
-        
-            self.setBehaviour(self.goToPoint(i))
+        self.behaviour = lambda : self.goToPoint( point, startSpin, directionToStartAt )
 
 
     def spinAndFindBox(self):
@@ -409,7 +410,14 @@ class Jasmine(Robot):
 
         else:
 
-            self.behaviour = self.continueSearching
+            self.behaviour = self.releaseBlock
+
+
+    def releaseBlock(self):
+
+        # lift the claw and reverse the motors
+        self.clawMotor.setPosition( 1.8 )
+        self.setWheelSpeeds( -3.0, -3.0 )
 
          
     def continueSearching(self):
