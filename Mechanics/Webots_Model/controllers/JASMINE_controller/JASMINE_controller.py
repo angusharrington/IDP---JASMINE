@@ -422,6 +422,9 @@ class Jasmine(Robot):
             self.boxFirstEdgeTime = None
             self.inRightPlace = False
 
+            # open the claw ready to get the box
+            self.clawMotor.setPosition( 1.8 )
+
             # after a time of rotationTime, call self.startBoxApproach
             self.schedule( rotationTime, self.startBoxApproach )
 
@@ -454,9 +457,6 @@ class Jasmine(Robot):
 
         # stop the previous behaviour
         self.behaviour = lambda : None
-
-        # open the claw ready to get the box
-        self.clawMotor.setPosition( 1.8 )
 
         # start to move forward and start the goToBox behaviour
         self.setWheelSpeeds( 8.0, 8.0 )
