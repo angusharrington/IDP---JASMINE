@@ -53,6 +53,7 @@ class Jasmine(Robot):
         self.otherRobot       = np.array([[0, 0], [0, 0], [0, 0]])
         self.pointsSearched   = 0 # number of points in the grid that we have spun around completely and cleared
         self.directionCleared = np.array( [1,0,0] ) # direction that we have cleared up to on the current point - starting from 1, 0, 0
+        self.inRightPlace     = False
 
         # Robot dependant variables
         if sys.argv[1] == "red":
@@ -373,10 +374,18 @@ class Jasmine(Robot):
             side = rot.dot(straight)
             forwardDisp = straight*(self.distances[-1, 1]+0.25)
             objLoc = self.pos + np.array([forwardDisp[0], 0, forwardDisp[1]]) + np.array([side[0], 0, side[1]])*0.07
+            greenSquare = [[0.2, -0.6], [0.2, -0.2], [-0.2, -0.2], [-0.2, -0.6]]
+            redSquare = [[0.2, 0.6], [0.2, 0.2], [-0.2, 0.2], [-0.2, 0.6]]
+            arena = [[1.15, 1.15], [1.15, -1.15], [-1.15, -1.15], [-1.15, 1.15]]
+
+            print(np.array([objLoc[0], objLoc[2]]), "ooh")
+            print(self.intersect(np.array([objLoc[0], objLoc[2]]), redSquare), "hello")
+            if self.intersect(np.array([objLoc[0], objLoc[2]]), greenSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), redSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), arena) == True:
+                self.inRightPlace = True
 
             
         # check if the left distance sensor detected an upwards step and we already detected a step from the other sensor
-        if self.distances[-1, 0] - self.distances[-2, 0] > 0.15 and self.boxFirstEdgeTime is not None:
+        if self.distances[-1, 0] - self.distances[-2, 0] > 0.15 and self.boxFirstEdgeTime is not None and self.inRightPlace is True:
 
             # we have now cleared the angle up to this direction
             self.directionCleared = self.forward
@@ -389,6 +398,7 @@ class Jasmine(Robot):
 
             # clear the boxFirstEdgeTime as we are done with it
             self.boxFirstEdgeTime = None
+            self.inRightPlace = False
 
             # after a time of rotationTime, call self.startBoxApproach
             self.schedule( rotationTime, self.startBoxApproach )
