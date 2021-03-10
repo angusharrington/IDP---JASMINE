@@ -49,7 +49,7 @@ class Jasmine(Robot):
         self.redLevel         = 0.0
         self.boxFirstEdgeTime = 0
         self.receivedData     = np.array([])
-        self.otherRobot       = np.array([[0, 0], [0, 0]])
+        self.otherRobot       = np.array([[0, 0], [0, 0], [0, 0]])
         self.pointsSearched   = 0 # number of points in the grid that we have spun around completely and cleared
         self.directionCleared = np.array( [1,0,0] ) # direction that we have cleared up to on the current point - starting from 1, 0, 0
 
@@ -105,10 +105,6 @@ class Jasmine(Robot):
         self.greenSensor.enable( self.timestep )
         self.redSensor.enable( self.timestep )
         self.receiver.enable( self.timestep )
-
-        # code for single distance sensor robot
-        # self.distanceSensor = self.getDevice( "DistanceSensorFront" )
-        # self.distanceSensor.enable( self.timestep )
 
         # set the motors' positions to infinity so we can use velocity control
         self.leftWheelMotor.setPosition(  float("inf") )
@@ -189,7 +185,7 @@ class Jasmine(Robot):
         self.angle   = np.arctan2( gpsDifference[2], gpsDifference[0] )
         self.forward = norm( gpsDifference )
 
-        # send other robot position and velocity for collision avoidance (ignoring y co-ordinate)
+        # send other robot position, velocity and forward direction for collision avoidance (ignoring y co-ordinate)
         posVelAndFor = struct.pack('ffffff', self.pos[0], self.pos[2], self.vel[0], self.vel[2], self.forward[0], self.forward[2])
         self.emitter.send(posVelAndFor)
 
@@ -208,6 +204,30 @@ class Jasmine(Robot):
                 vector = np.asarray(struct.unpack("fff", data))
                 self.receivedData = np.append(self.receivedData, vector)
 
+    # function that tells you if a point lies in a region
+    def intersect(self, point, poly):
+
+        x = point[0]
+        y = point[1]
+
+        n = 4
+        inside = False
+        p2x = 0.0
+        p2y = 0.0
+        xints = 0.0
+        p1x,p1y = poly[0]
+        for i in range(n+1):
+            p2x,p2y = poly[i % n]
+            if y > min(p1y,p2y):
+                if y <= max(p1y,p2y):
+                    if x <= max(p1x,p2x):
+                        if p1y != p2y:
+                            xints = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
+                        if p1x == p2x or x <= xints:
+                            inside = not inside
+            p1x,p1y = p2x,p2y
+
+        return inside
 
     # This function should be called by 1 robot only every frame
     def collisionAvoid(self):
@@ -218,7 +238,7 @@ class Jasmine(Robot):
         pos22 = self.otherRobot[0] + self.otherRobot[1]*0.5
 
         # 90degree CW rotation
-        rot = np.array([[0, 1], [-1, 0]])
+        rot = np.array([[0, -1], [1, 0]])
 
         front1 = norm(np.array([self.forward[0], self.forward[2]]))
         front2 = norm(self.otherRobot[2])
@@ -232,36 +252,12 @@ class Jasmine(Robot):
         # coords of other robot
         p2 = [[self.otherRobot[0] + gpsToSide*(rot.dot(front2)) - front2*gpsToBack], [self.otherRobot[0] - gpsToSide*(rot.dot(front2)) - front2*gpsToBack], [pos22 + gpsToSide*(rot.dot(front2)) + front2*gpsToFront], [pos22 - gpsToSide*(rot.dot(front2)) + front2*gpsToFront]]
 
-        def intersect(point, poly):
-
-            x = point[0]
-            y = point[1]
-
-            n = 4
-            inside = False
-            p2x = 0.0
-            p2y = 0.0
-            xints = 0.0
-            p1x,p1y = poly[0]
-            for i in range(n+1):
-                p2x,p2y = poly[i % n]
-                if y > min(p1y,p2y):
-                    if y <= max(p1y,p2y):
-                        if x <= max(p1x,p2x):
-                            if p1y != p2y:
-                                xints = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
-                            if p1x == p2x or x <= xints:
-                                inside = not inside
-                p1x,p1y = p2x,p2y
-
-            return inside
-
         for i in p1:
-            if intersect(i, p2) is True:
+            if self.intersect(i, p2) is True:
                 self.setWheelSpeeds(0,0)
         
         for j in p2:
-            if intersect(j, p1) is True:
+            if self.intersect(j, p1) is True:
                 self.setWheelSpeeds(0, 0)
 
 
@@ -303,7 +299,7 @@ class Jasmine(Robot):
         self.setWheelSpeeds( 8.0+turnAmount, 8.0-turnAmount )
 
         # if we're very close to the destination then we have arrived
-        arrived = np.linalg.norm( direction ) < 0.01
+        arrived = np.linalg.norm( direction ) < 0.04
 
         # if we want to face a certain direction once we arrive then start the turnToDirection behaviour
         if arrived and directionOnceArrived is not None:
@@ -351,6 +347,12 @@ class Jasmine(Robot):
 
             # record the time that this happened
             self.boxFirstEdgeTime = self.simTime
+            rot = np.array([[0, -1], [1, 0]])
+            straight = norm(np.array([self.forward[0], self.forward[2]]))
+            side = rot.dot(straight)
+            forwardDisp = straight*(self.distances[-1, 1]+0.25)
+            objLoc = self.pos + np.array([forwardDisp[0], 0, forwardDisp[1]]) + np.array([side[0], 0, side[1]])*0.07
+
             
         # check if the left distance sensor detected an upwards step
         if self.distances[-1, 0] - self.distances[-2, 0] > 0.15:
@@ -366,6 +368,7 @@ class Jasmine(Robot):
 
             # after a time of rotationTime, call self.startBoxApproach
             self.schedule( rotationTime, self.startBoxApproach )
+
 
 
     def startBoxApproach(self):
@@ -387,9 +390,9 @@ class Jasmine(Robot):
 
         if self.greenLevel > 0.99 or self.redLevel > 0.99:
 
-            self.schedule( 1000, lambda : self.setBehaviour( self.checkBox ) )
+            self.schedule( 500, lambda : self.setBehaviour( self.checkBox ) )
 
-
+    
     def checkBox(self):
 
         # stop the robot and close the claw
