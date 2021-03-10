@@ -6,8 +6,11 @@ import struct
 import sys
 
 
+# mag(v) returns the magnitude of v
+mag = lambda v : np.linalg.norm(v)
+
 # norm(v) returns v scaled to unit length
-norm = lambda v : v / np.linalg.norm(v)
+norm = lambda v : v / mag(v)
 
 # calculate actual distance from the sensor reading
 distanceFromReading = lambda x : (0.32 / x) ** (5/6) - 0.1
@@ -300,8 +303,6 @@ class Jasmine(Robot):
 
     def goToPoint(self, destination, nextBehaviour = lambda : None, directionOnceArrived = None, tolerance = 0.02):
     
-
-
         # get the direction to the destination, making sure it's in the horizontal plane
         direction    = destination - self.pos
         direction[1] = 0
@@ -310,30 +311,38 @@ class Jasmine(Robot):
         turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 30, -4, 4 )
 
         # get a baseSpeed value - slow if we're close to the destination but not facing it and otherwise fast
-        baseSpeed = 8.0 - min( abs(turnAmount) * 10 * (np.linalg.norm(direction)<0.1),  8 )
+        baseSpeed = 8.0 - min( abs(turnAmount) * 10 * (mag(direction) < 0.1),  8 )
 
-        # set the wheel speeds based on this value
-        self.setWheelSpeeds( baseSpeed+turnAmount, baseSpeed-turnAmount )
+        # get a value that is large when we are heading into the red square
+        toRedSquare    = redCentre - self.pos
+        avoidRedSquare = np.clip( ( 1.4 - mag( toRedSquare ) ) * ( norm(toRedSquare) @ self.forward ), 0, 1 ) * 10 * ( mag(destination - redCentre) > 0.1 )
 
-        # Sometimes the robot charges through a square and pushes out all blocks
-        greenSquare = [[0.2, -0.6], [0.2, -0.2], [-0.2, -0.2], [-0.2, -0.6]]
-        redSquare = [[0.2, 0.6], [0.2, 0.2], [-0.2, 0.2], [-0.2, 0.6]]
+        # get a value that is large when we are heading into the green square
+        toGreenSquare    = greenCentre - self.pos
+        avoidGreenSquare = np.clip( ( 1.4 - mag( toGreenSquare ) ) * ( norm(toGreenSquare) @ self.forward ), 0, 1 ) * 10 * ( mag(destination - greenCentre) > 0.1 )
 
-        # position of nose in 0.1 seconds
-        positionNext = self.pos + self.forward*0.1*norm(self.vel) + 0.22*self.forward
-        positionNext = np.array([positionNext[0], positionNext[2]])
+        # set the wheel speeds based on these values
+        self.setWheelSpeeds( baseSpeed + turnAmount + avoidRedSquare + avoidGreenSquare, baseSpeed - turnAmount - avoidRedSquare - avoidGreenSquare )
 
-        if self.intersect(positionNext, greenSquare) is True:
-            self.setWheelSpeeds(2, -2) 
-            self.schedule(0.4, self.setWheelSpeeds(5, 5))
-            self.schedule(0.5, self.setWheelSpeeds(0, 0))
-            self.behaviour = lambda : self.goToPoint( destination, self.startSpin, directionOnceArrived )
+        # # Sometimes the robot charges through a square and pushes out all blocks
+        # greenSquare = [[0.2, -0.6], [0.2, -0.2], [-0.2, -0.2], [-0.2, -0.6]]
+        # redSquare = [[0.2, 0.6], [0.2, 0.2], [-0.2, 0.2], [-0.2, 0.6]]
 
-        if self.intersect(positionNext, redSquare) is True:
-            self.setWheelSpeeds(2, -2)
-            self.schedule(0.4, self.setWheelSpeeds(5, 5))
-            self.schedule(0.5, self.setWheelSpeeds(0, 0))
-            self.behaviour = lambda : self.goToPoint( destination, self.startSpin, directionOnceArrived )
+        # # position of nose in 0.1 seconds
+        # positionNext = self.pos + self.forward*0.1*norm(self.vel) + 0.22*self.forward
+        # positionNext = np.array([positionNext[0], positionNext[2]])
+
+        # if self.intersect(positionNext, greenSquare) is True:
+        #     self.setWheelSpeeds(2, -2) 
+        #     self.schedule(0.4, self.setWheelSpeeds(5, 5))
+        #     self.schedule(0.5, self.setWheelSpeeds(0, 0))
+        #     self.behaviour = lambda : self.goToPoint( destination, self.startSpin, directionOnceArrived )
+
+        # if self.intersect(positionNext, redSquare) is True:
+        #     self.setWheelSpeeds(2, -2)
+        #     self.schedule(0.4, self.setWheelSpeeds(5, 5))
+        #     self.schedule(0.5, self.setWheelSpeeds(0, 0))
+        #     self.behaviour = lambda : self.goToPoint( destination, self.startSpin, directionOnceArrived )
 
         # if we're within the tolerance distance to the destination then we have arrived
         arrived = np.linalg.norm( direction ) < tolerance
