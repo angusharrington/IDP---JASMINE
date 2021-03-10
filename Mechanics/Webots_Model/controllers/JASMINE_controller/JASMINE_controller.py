@@ -212,10 +212,10 @@ class Jasmine(Robot):
     # This function should be called by 1 robot only every frame
     def collisionAvoid(self):
 
-        # produce coordinates for areas both robots will cover over the next second, if these overlap, stop 1 robot
-        # thinking 1 second is too big
-        pos2 = self.pos + self.vel*1
-        pos22 = self.otherRobot[0] + self.otherRobot[1]*1
+        # produce coordinates for areas both robots will cover over the next 0.5 seconds, if these overlap, stop 1 robot
+
+        pos2 = self.pos + self.vel*0.5
+        pos22 = self.otherRobot[0] + self.otherRobot[1]*0.5
 
         # 90degree CW rotation
         rot = np.array([[0, 1], [-1, 0]])
@@ -223,9 +223,8 @@ class Jasmine(Robot):
         front1 = norm(np.array([self.forward[0], self.forward[2]]))
         front2 = norm(self.otherRobot[2])
 
-        # dimensions (complete guesses, waiting for confirmation from Chris)
-        gpsToFront = 0.23
-        gpsToSide  = 0.05
+        gpsToFront = 0.22
+        gpsToSide  = 0.075
         gpsToBack  = 0.1
 
         # coords of this robot
@@ -237,9 +236,6 @@ class Jasmine(Robot):
 
             x = point[0]
             y = point[1]
-            vertx = [polygon[t][0] for t in range(4)]
-            verty = [polygon[t][1] for t in range(4)]
-
 
             n = 4
             inside = False
