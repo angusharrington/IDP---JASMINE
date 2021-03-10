@@ -210,6 +210,7 @@ class Jasmine(Robot):
                 vector = np.asarray(struct.unpack("fff", data))
                 self.receivedData = np.append(self.receivedData, vector)
 
+
     # function that tells you if a point lies in a region
     def intersect(self, point, poly):
 
@@ -363,10 +364,11 @@ class Jasmine(Robot):
             return
 
         # check if the right distance sensor detected a downwards step
-        if self.distances[-1, 1] - self.distances[-2,1] < -0.15:
+        if self.distances[-1, 1] - self.distances[-2,1] < -0.05:
 
             # record the time that this happened
             self.boxFirstEdgeTime = self.simTime
+
             rot = np.array([[0, -1], [1, 0]])
             straight = norm(np.array([self.forward[0], self.forward[2]]))
             side = rot.dot(straight)
@@ -375,7 +377,7 @@ class Jasmine(Robot):
 
             
         # check if the left distance sensor detected an upwards step and we already detected a step from the other sensor
-        if self.distances[-1, 0] - self.distances[-2, 0] > 0.15 and self.boxFirstEdgeTime is not None:
+        if self.distances[-1, 0] - self.distances[-2, 0] > 0.05 and self.boxFirstEdgeTime is not None:
 
             # we have now cleared the angle up to this direction
             self.directionCleared = self.forward
@@ -451,7 +453,7 @@ class Jasmine(Robot):
 
         # lift the claw and reverse the motors
         self.clawMotor.setPosition( 1.8 )
-        self.setWheelSpeeds( -5.0, -5.0 )
+        self.setWheelSpeeds( -7.0, -7.0 )
 
         # schedule locationsRoute and set behaviour to nothing
         self.behaviour = lambda : None
@@ -473,6 +475,15 @@ class Jasmine(Robot):
         self.locationsRoute()
 
 
+    def recoverFromStuck(self):
+
+        # sometimes the robot get stuck where the claw is on top of a block and the wheels are off the ground
+        if self.y > 0.055:
+
+            # just call releaseBlock to recover
+            self.releaseBlock()
+
+
     def mainLoop(self):
 
         # loop until simulation end
@@ -489,6 +500,9 @@ class Jasmine(Robot):
 
             # call the current behaviour function
             self.behaviour()
+
+            # recover from stuck in case we are
+            self.recoverFromStuck()
 
             # can print position and velocity
             # print( "pos: " + " ".join( ["%.2f" % v for v in self.pos] ) )
