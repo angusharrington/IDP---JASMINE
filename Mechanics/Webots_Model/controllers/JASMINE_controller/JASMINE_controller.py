@@ -302,11 +302,14 @@ class Jasmine(Robot):
         # get a value representing the amount we still need to turn
         turnAmount = np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) ** 0.5 * 20
 
+        # get a baseSpeed value - slow if we're close to the destination but not facing it and otherwise fast
+        baseSpeed = 8.0 - min( abs(turnAmount), 8 )
+
         # set the wheel speeds based on this value
-        self.setWheelSpeeds( 8.0+turnAmount, 8.0-turnAmount )
+        self.setWheelSpeeds( baseSpeed+turnAmount, baseSpeed-turnAmount )
 
         # if we're very close to the destination then we have arrived
-        arrived = np.linalg.norm( direction ) < 0.01
+        arrived = np.linalg.norm( direction ) < 0.02
 
         # if we want to face a certain direction once we arrive then start the turnToDirection behaviour
         if arrived and directionOnceArrived is not None:
