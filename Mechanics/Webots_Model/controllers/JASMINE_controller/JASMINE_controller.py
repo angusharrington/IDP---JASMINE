@@ -421,8 +421,8 @@ class Jasmine(Robot):
         closeToOtherColourBoxes = [ mag(objLoc - box) < 0.05 for box in self.otherColourBoxes ]
 
         # if the block is too close to any we've already seen then ignore it unless the simulation has been going for a long time
-        if True in closeToOtherColourBoxes and self.simTime < 12000:
-            return False
+        # if True in closeToOtherColourBoxes and self.simTime < 12000:
+        #     return False
 
         return self.intersect(np.array([objLoc[0], objLoc[2]]), greenSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), redSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), arena) == True
             
