@@ -18,8 +18,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation 0.9340044381598565 0.3458871843528835 -0.08943022530512296 5.868250613443417
-  position 0.15167159372156863 0.7391971199733542 1.791479379069099
+  orientation -0.4515730600947042 0.8571042381838936 0.2478993672519394 0.7691686706982139
+  position 2.4117602730952994 1.5235927115583359 2.3017796442879166
   follow "JASMINE_red"
   followType "Mounted Shot"
 }
@@ -34,7 +34,7 @@ Floor {
   }
 }
 target {
-  translation -0.639 0.05 0.42
+  translation -1.139 0.05 0.42
   name "target(9)"
 }
 target {
@@ -42,7 +42,7 @@ target {
   name "target(8)"
 }
 target {
-  translation 0.7867 0.05 0.1914
+  translation 0.4767 0.05 0.5014
   name "target(7)"
 }
 target {
@@ -50,7 +50,7 @@ target {
   name "target(6)"
 }
 target {
-  translation 0.366 0.05 0.6354
+  translation 0.366 0.05 -0.0146
   colour 0 1 0
   name "target(5)"
 }
@@ -60,7 +60,7 @@ target {
   name "target(1)"
 }
 target {
-  translation 0.8205 0.05 0.4842
+  translation 0.8205 0.05 0.1142
   colour 0 1 0
   name "target(2)"
 }
@@ -143,6 +143,6 @@ TexturedBackgroundLight {
   texture "empty_office"
 }
 JASMINE_v4 {
-  hidden rotation_9 -0.9774889114414438 -1.4391698092649037e-07 0.21098679581670687 1.5158897891376391e-05
-  translation 0 0.05 0.31
+  hidden rotation_9 -0.9774888589014479 -1.439169731909575e-07 0.21098703923114448 1.5158897891376391e-05
+  translation -0.04 0.05 -0.13
 }
