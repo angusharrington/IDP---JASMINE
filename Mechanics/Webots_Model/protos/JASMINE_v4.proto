@@ -111,7 +111,7 @@ Robot {
           ]
         }
         Transform {
-          translation -0.08 -0.038 0
+          translation -0.08 -0.041 0
           children [
             DEF Ball Shape {
               appearance PBRAppearance {
