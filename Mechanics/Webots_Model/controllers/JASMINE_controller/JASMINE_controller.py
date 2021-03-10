@@ -54,6 +54,10 @@ class Jasmine(Robot):
         self.pointsSearched   = 0 # number of points in the grid that we have spun around completely and cleared
         self.directionCleared = np.array( [1,0,0] ) # direction that we have cleared up to on the current point - starting from 1, 0, 0
         self.inRightPlace     = False
+        self.inTransit        = False
+        self.forSquareAvoid1  = np.zeros( 3 )
+        self.forSquareAvoid2  = np.zeros( 3 )
+ 
 
         # Robot dependant variables
         if sys.argv[1] == "red":
@@ -318,6 +322,7 @@ class Jasmine(Robot):
 
         # when we have arrived, start the next behaviour
         elif arrived:
+            self.inTransit = False
             self.behaviour = nextBehaviour
 
 
@@ -346,7 +351,11 @@ class Jasmine(Robot):
         # figure out where we have to go now
         pointToGoTo        = spinPositions[self.pointsSearched]
         directionToStartAt = self.directionCleared
-        
+        self.inTransit = True
+
+        self.forSquareAvoid1 = directionToStartAt
+        self.forSquareAvoid2 = pointToGoTo
+
         # start going to the next point
         self.behaviour = lambda : self.goToPoint( pointToGoTo, self.startSpin, directionToStartAt )
 
@@ -463,6 +472,33 @@ class Jasmine(Robot):
             # if its the wrong colour call releaseBlock 
             self.releaseBlock()
 
+    def avoidSquares (self):
+    
+    # sometimes the robots path invlolves going going through a square pushing blocks out of it
+
+        # check if this is going to happen
+        if self.inTransit is False:
+            return
+
+        greenSquare = [[0.2, -0.6], [0.2, -0.2], [-0.2, -0.2], [-0.2, -0.6]]
+        redSquare = [[0.2, 0.6], [0.2, 0.2], [-0.2, 0.2], [-0.2, 0.6]]
+
+        # position of nose in 0.1 seconds
+        positionNext = self.pos + self.forward*0.1*norm(self.vel) + 0.22*self.forward
+        positionNext = np.array([positionNext[0], positionNext[2]])
+
+        if self.intersect(positionNext, greenSquare) is True:
+            self.setWheelSpeeds(2, -2) 
+            self.schedule(0.4, self.setWheelSpeeds(5, 5))
+            self.schedule(0.5, self.setWheelSpeeds(0, 0))
+            self.behaviour = lambda : self.goToPoint( self.forSquareAvoid2, self.startSpin, self.forSquareAvoid1 )
+
+        if self.intersect(positionNext, redSquare) is True:
+            self.setWheelSpeeds(2, -2)
+            self.schedule(0.4, self.setWheelSpeeds(5, 5))
+            self.schedule(0.5, self.setWheelSpeeds(0, 0))
+            self.behaviour = lambda : self.goToPoint( self.forSquareAvoid2, self.startSpin, self.forSquareAvoid1 )
+        
 
     def releaseBlock(self):
 
