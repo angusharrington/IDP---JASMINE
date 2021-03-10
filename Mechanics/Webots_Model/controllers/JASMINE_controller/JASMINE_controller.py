@@ -58,6 +58,8 @@ class Jasmine(Robot):
         self.directionCleared = np.array( [1,0,0] ) # direction that we have cleared up to on the current point - starting from 1, 0, 0
         self.inRightPlace     = False
         self.goingHome        = False
+        self.ourColourBoxes   = []
+        self.otherColourBoxes = []
  
 
         # Robot dependant variables
@@ -213,8 +215,8 @@ class Jasmine(Robot):
 
             elif sys.getsizeof(data) == 45:
 
-                vector = np.asarray(struct.unpack("fff", data))
-                self.receivedData = np.append(self.receivedData, vector)
+                boxLoc = np.asarray(struct.unpack("fff", data))
+                self.ourColourBoxes.append( boxLoc )
 
 
     # function that tells you if a point lies in a region
@@ -339,14 +341,13 @@ class Jasmine(Robot):
 
         # if we're within the tolerance distance to the destination then we have arrived
         arrived = np.linalg.norm( direction ) < tolerance
-        
+
         # if we want to face a certain direction once we arrive then start the turnToDirection behaviour
         if arrived and directionOnceArrived is not None:
             self.behaviour = lambda : self.turnToDirection( directionOnceArrived, nextBehaviour )
 
         # when we have arrived, start the next behaviour
         elif arrived:
-            self.inTransit = False
             self.behaviour = nextBehaviour
 
 
@@ -439,6 +440,12 @@ class Jasmine(Robot):
         redSquare = [[0.2, 0.6], [0.2, 0.2], [-0.2, 0.2], [-0.2, 0.6]]
         arena = [[1.15, 1.15], [1.15, -1.15], [-1.15, -1.15], [-1.15, 1.15]]
 
+        # get the distances to all the other colour boxes
+        closeToOtherColourBoxes = [ mag(objLoc - box) < 0.05 for box in self.otherColourBoxes ]
+
+        # if the block is too close to any we've already seen then ignore it unless the simulation has been going for a long time
+        # if True in closeToOtherColourBoxes and self.simTime < 12000:
+        #     return False
 
         return self.intersect(np.array([objLoc[0], objLoc[2]]), greenSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), redSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), arena) == True
             
@@ -498,10 +505,12 @@ class Jasmine(Robot):
 
         else:
 
+            # tell the other robot the location of this block
+            self.sendBoxLocation()
+
             # if its the wrong colour call releaseBlock 
             self.releaseBlock()
 
-        
 
     def releaseBlock(self):
 
@@ -515,19 +524,17 @@ class Jasmine(Robot):
         self.schedule( 1000, self.locationsRoute )
 
          
-    def continueSearching(self):
+    def sendBoxLocation(self):
 
-        # close the claw
-        self.clawMotor.setPosition( 0 )
+        # assume block is 0.18 in front of the gps
+        boxLoc = self.pos + self.forward * 0.18
 
-        # Note 0.1 chosen arbitrarily, needs to be made more accurate
-        blockLoc = self.pos+self.forward*0.1
+        # add the box location to our robots otherColourBoxes list
+        self.otherColourBoxes.append( boxLoc )
         
         # turn data in array into c type data for transmission
-        message = struct.pack('fff', blockLoc[0], blockLoc[1], blockLoc[2])
+        message = struct.pack('fff', boxLoc[0], boxLoc[1], boxLoc[2])
         self.emitter.send(message)
-        
-        self.locationsRoute()
 
 
     def reverseFromWall(self):
