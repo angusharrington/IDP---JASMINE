@@ -65,7 +65,6 @@ class Jasmine(Robot):
             self.colour = Colour.GREEN
             self.home   = greenCentre
 
-
         # x, y and z coords for convenience
         self.x, self.y, self.z = self.pos
 
