@@ -293,7 +293,7 @@ class Jasmine(Robot):
             self.behaviour = nextBehaviour
 
 
-    def goToPoint(self, destination, nextBehaviour = lambda : None, directionOnceArrived = None):
+    def goToPoint(self, destination, nextBehaviour = lambda : None, directionOnceArrived = None, tolerance = 0.02):
 
         # get the direction to the destination, making sure it's in the horizontal plane
         direction    = destination - self.pos
@@ -308,8 +308,8 @@ class Jasmine(Robot):
         # set the wheel speeds based on this value
         self.setWheelSpeeds( baseSpeed+turnAmount, baseSpeed-turnAmount )
 
-        # if we're very close to the destination then we have arrived
-        arrived = np.linalg.norm( direction ) < 0.02
+        # if we're within the tolerance distance to the destination then we have arrived
+        arrived = np.linalg.norm( direction ) < tolerance
 
         # if we want to face a certain direction once we arrive then start the turnToDirection behaviour
         if arrived and directionOnceArrived is not None:
@@ -411,6 +411,7 @@ class Jasmine(Robot):
 
         if self.greenLevel > 0.99 or self.redLevel > 0.99:
 
+            self.behaviour = lambda : None
             self.schedule( 400, lambda : self.setBehaviour( self.checkBox ) )
 
 
@@ -437,7 +438,8 @@ class Jasmine(Robot):
         # if we picked up the right colour then bring it back, otherwise continue the search
         if colour == self.colour:
 
-            self.schedule( 1000, lambda : self.setBehaviour( lambda : self.goToPoint( self.home, self.releaseBlock ) ) )
+            self.behaviour = lambda : None
+            self.schedule( 1000, lambda : self.setBehaviour( lambda : self.goToPoint( self.home, self.releaseBlock, tolerance=0.2 ) ) )
 
         else:
 
