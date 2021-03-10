@@ -393,7 +393,6 @@ class Jasmine(Robot):
             self.schedule( rotationTime, self.startBoxApproach )
 
 
-
     def startBoxApproach(self):
 
         # stop the previous behaviour
@@ -417,7 +416,6 @@ class Jasmine(Robot):
             self.schedule( 400, lambda : self.setBehaviour( self.checkBox ) )
 
 
-    
     def checkBox(self):
 
         # stop the robot and close the claw
@@ -441,14 +439,12 @@ class Jasmine(Robot):
         if colour == self.colour:
 
             self.behaviour = lambda : None
-            self.schedule( 1000, lambda : self.setBehaviour( lambda : self.goToPoint( self.home, self.releaseBlock, tolerance=0.2 ) ) )
+            self.schedule( 500, lambda : self.setBehaviour( lambda : self.goToPoint( self.home, self.releaseBlock, tolerance=0.2 ) ) )
 
         else:
 
-            # if its the wrong colour start releaseBlock and schedule continueSearching 
-            self.behaviour = self.releaseBlock
-
-            self.schedule( 2000, lambda : self.setBehaviour(self.continueSearching) )
+            # if its the wrong colour call releaseBlock 
+            self.releaseBlock()
 
 
     def releaseBlock(self):
@@ -459,7 +455,7 @@ class Jasmine(Robot):
 
         # schedule locationsRoute and set behaviour to nothing
         self.behaviour = lambda : None
-        self.schedule( 1400, self.locationsRoute )
+        self.schedule( 1000, self.locationsRoute )
 
          
     def continueSearching(self):

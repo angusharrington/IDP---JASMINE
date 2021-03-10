@@ -18,8 +18,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation 0.37081083133284404 0.29259244790497513 0.8814130625281312 0.0717497276671105
-  position 0.1229907423618731 0.022772392380362334 0.7852508667418274
+  orientation -0.8668022975919116 -0.48563335981253986 -0.11319901380563005 0.8719179196786021
+  position -0.4708759324802666 1.5251176385975522 1.6699566122479839
   followType "Mounted Shot"
 }
 Background {
@@ -37,11 +37,11 @@ target {
   name "target(9)"
 }
 target {
-  translation 0.977 0.05 0.6057
+  translation 0.357 0.05 0.3457
   name "target(8)"
 }
 target {
-  translation 0.4767 0.05 0.5014
+  translation 0.4767 0.05 -0.9486
   name "target(7)"
 }
 target {
@@ -59,7 +59,8 @@ target {
   name "target(1)"
 }
 target {
-  translation 0.8205 0.05 0.1142
+  translation 0.30121 0.120711 0.8142
+  rotation 0 0 1 -2.3561953071795863
   colour 0 1 0
   name "target(2)"
 }
