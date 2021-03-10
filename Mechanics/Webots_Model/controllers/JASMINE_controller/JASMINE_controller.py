@@ -406,8 +406,7 @@ class Jasmine(Robot):
         redSquare = [[0.2, 0.6], [0.2, 0.2], [-0.2, 0.2], [-0.2, 0.6]]
         arena = [[1.15, 1.15], [1.15, -1.15], [-1.15, -1.15], [-1.15, 1.15]]
 
-        # print(np.array([objLoc[0], objLoc[2]]), "ooh")
-        # print(self.intersect(np.array([objLoc[0], objLoc[2]]), redSquare), "hello")
+
         return self.intersect(np.array([objLoc[0], objLoc[2]]), greenSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), redSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), arena) == True
             
 
