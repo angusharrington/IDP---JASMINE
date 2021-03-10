@@ -96,7 +96,7 @@ Robot {
           ]
         }
         Transform {
-          translation -0.06 -0.03 0
+          translation -0.08 -0.03 0
           children [
             Shape {
               appearance PBRAppearance {
@@ -111,7 +111,36 @@ Robot {
           ]
         }
         Transform {
-          translation -0.06 -0.041 0
+          translation -0.08 -0.038 0
+          children [
+            DEF Ball Shape {
+              appearance PBRAppearance {
+                metalness 0
+              }
+              geometry Sphere {
+                radius 0.01
+                subdivision 2
+              }
+            }
+          ]
+        }
+        Transform {
+          translation 0.09 -0.03 0
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor IS baseColor
+                metalness 0
+              }
+              geometry Cylinder {
+                height 0.02
+                radius 0.01
+              }
+            }
+          ]
+        }
+        Transform {
+          translation 0.09 -0.038 0
           children [
             DEF Ball Shape {
               appearance PBRAppearance {
