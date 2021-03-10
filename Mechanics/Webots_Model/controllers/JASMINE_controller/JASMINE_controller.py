@@ -315,7 +315,30 @@ class Jasmine(Robot):
 
         # set the wheel speeds based on these values
         self.setWheelSpeeds( baseSpeed + turnAmount, baseSpeed - turnAmount )
+        
+        ''' 
+        greenSquare = [[0.2, -0.6], [0.2, -0.2], [-0.2, -0.2], [-0.2, -0.6]]
+        redSquare = [[0.2, 0.6], [0.2, 0.2], [-0.2, 0.2], [-0.2, 0.6]]
+        
+        # position of nose in 0.1 seconds
+        positionNext = self.pos + self.forward*0.2*norm(self.vel) + 0.22*self.forward
+        positionNext = np.array([positionNext[0], positionNext[2]])
+        xzposNose = 0.3*self.forward + self.pos
+        xzposNose = np.array([xzposNose[0], xzposNose[2]])
 
+
+        if self.intersect(positionNext, greenSquare) is True and self.goingHome is False and self.intersect(xzposNose, greenSquare) is False:
+            self.setWheelSpeeds(2, -2) 
+            self.schedule(0.4, self.setWheelSpeeds(5, 5))
+            self.schedule(0.5, self.setWheelSpeeds(0, 0))
+            self.behaviour = lambda : self.goToPoint( destination, self.startSpin, directionOnceArrived )
+
+        if self.intersect(positionNext, redSquare) is True and self.goingHome is False and self.intersect(xzposNose, redSquare) is False:
+            self.setWheelSpeeds(2, -2)
+            self.schedule(0.4, self.setWheelSpeeds(5, 5))
+            self.schedule(0.5, self.setWheelSpeeds(0, 0))
+        '''
+        
         # if we're within the tolerance distance to the destination then we have arrived
         arrived = np.linalg.norm( direction ) < tolerance
 
@@ -475,10 +498,10 @@ class Jasmine(Robot):
             
         # if we picked up the right colour then bring it back, otherwise continue the search
         if colour == self.colour:
-
+            self.goingHome = True
             self.behaviour = lambda : None
             self.schedule( 500, lambda : self.setBehaviour( lambda : self.goToPoint( self.home, self.releaseBlock, tolerance=0.2 ) ) )
-            self.goingHome = True
+            
 
         else:
 
@@ -494,6 +517,7 @@ class Jasmine(Robot):
         # lift the claw and reverse the motors
         self.clawMotor.setPosition( 1.8 )
         self.setWheelSpeeds( -7.0, -7.0 )
+        self.goingHome = False
 
         # schedule locationsRoute and set behaviour to nothing
         self.behaviour = lambda : None
