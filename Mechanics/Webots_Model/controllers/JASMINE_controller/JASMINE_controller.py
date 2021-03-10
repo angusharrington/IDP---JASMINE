@@ -336,9 +336,6 @@ class Jasmine(Robot):
             self.setWheelSpeeds( baseSpeed + turnAmount, baseSpeed - turnAmount )
 
 
-
- 
-
         # if we're within the tolerance distance to the destination then we have arrived
         arrived = np.linalg.norm( direction ) < tolerance
 
@@ -443,6 +440,17 @@ class Jasmine(Robot):
         redSquare = [[0.2, 0.6], [0.2, 0.2], [-0.2, 0.2], [-0.2, 0.6]]
         arena = [[1.15, 1.15], [1.15, -1.15], [-1.15, -1.15], [-1.15, 1.15]]
 
+        # other robots 4 corners
+        centre = self.otherRobot[0]
+        ahead = self.otherRobot[2]
+
+        gpsToFront = 0.22
+        gpsToSide  = 0.085
+        gpsToBack  = 0.1
+
+
+        fourCorners = [[centre + gpsToSide*(rot.dot(ahead)) - ahead*gpsToBack], [centre - gpsToSide*(rot.dot(ahead)) - ahead*gpsToBack], [centre + gpsToSide*(rot.dot(ahead)) + ahead*gpsToFront], [centre - gpsToSide*(rot.dot(ahead)) + ahead*gpsToFront]]
+
         # get the distances to all the other colour boxes
         closeToOtherColourBoxes = [ mag(objLoc - box) < 0.05 for box in self.otherColourBoxes ]
 
@@ -450,7 +458,7 @@ class Jasmine(Robot):
         # if True in closeToOtherColourBoxes and self.simTime < 12000:
         #     return False
 
-        return self.intersect(np.array([objLoc[0], objLoc[2]]), greenSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), redSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), arena) == True
+        return self.intersect(np.array([objLoc[0], objLoc[2]]), fourCorners) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), greenSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), redSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), arena) == True
             
 
     def startBoxApproach(self):
