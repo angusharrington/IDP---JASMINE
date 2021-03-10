@@ -307,38 +307,38 @@ class Jasmine(Robot):
         direction    = destination - self.pos
         direction[1] = 0
 
-        # get a value representing the amount we still need to turn
         turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 30, -4, 4 )
 
         # get a baseSpeed value - slow if we're close to the destination but not facing it and otherwise fast
         baseSpeed = 8.0 - min( abs(turnAmount) * 10 * (mag(direction) < 0.1),  8 )
-
-        # set the wheel speeds based on these values
-        self.setWheelSpeeds( baseSpeed + turnAmount, baseSpeed - turnAmount )
-        
-        ''' 
         greenSquare = [[0.2, -0.6], [0.2, -0.2], [-0.2, -0.2], [-0.2, -0.6]]
         redSquare = [[0.2, 0.6], [0.2, 0.2], [-0.2, 0.2], [-0.2, 0.6]]
-        
-        # position of nose in 0.1 seconds
-        positionNext = self.pos + self.forward*0.2*norm(self.vel) + 0.22*self.forward
-        positionNext = np.array([positionNext[0], positionNext[2]])
+
         xzposNose = 0.3*self.forward + self.pos
-        xzposNose = np.array([xzposNose[0], xzposNose[2]])
+        xzposNose = np.array([xzposNose[0], xzposNose[2]])        
+
+        if self.goingHome is False and self.intersect(xzposNose, greenSquare) is False and self.intersect(xzposNose, redSquare) is False:
 
 
-        if self.intersect(positionNext, greenSquare) is True and self.goingHome is False and self.intersect(xzposNose, greenSquare) is False:
-            self.setWheelSpeeds(2, -2) 
-            self.schedule(0.4, self.setWheelSpeeds(5, 5))
-            self.schedule(0.5, self.setWheelSpeeds(0, 0))
-            self.behaviour = lambda : self.goToPoint( destination, self.startSpin, directionOnceArrived )
 
-        if self.intersect(positionNext, redSquare) is True and self.goingHome is False and self.intersect(xzposNose, redSquare) is False:
-            self.setWheelSpeeds(2, -2)
-            self.schedule(0.4, self.setWheelSpeeds(5, 5))
-            self.schedule(0.5, self.setWheelSpeeds(0, 0))
-        '''
+            # get a value that is large when we are heading into the red square
+            toRedSquare    = redCentre - self.pos
+            avoidRedSquare = np.clip( ( 1.4 - mag( toRedSquare ) ) * ( norm(toRedSquare) @ self.forward ), 0, 0.2 ) * 10 * ( mag(destination - redCentre) > 0.1 )
+
+            # get a value that is large when we are heading into the green square
+            toGreenSquare    = greenCentre - self.pos
+            avoidGreenSquare = np.clip( ( 1.4 - mag( toGreenSquare ) ) * ( norm(toGreenSquare) @ self.forward ), 0, 0.2 ) * 10 * ( mag(destination - greenCentre) > 0.1 )
+
+            # set the wheel speeds based on these values
+            self.setWheelSpeeds( baseSpeed + turnAmount + avoidRedSquare + avoidGreenSquare, baseSpeed - turnAmount - avoidRedSquare - avoidGreenSquare )
         
+        else:
+            self.setWheelSpeeds( baseSpeed + turnAmount, baseSpeed - turnAmount )
+
+
+
+ 
+
         # if we're within the tolerance distance to the destination then we have arrived
         arrived = np.linalg.norm( direction ) < tolerance
 
