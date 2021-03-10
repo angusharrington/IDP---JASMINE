@@ -490,6 +490,25 @@ class Jasmine(Robot):
         self.locationsRoute()
 
 
+    def reverseFromWall(self):
+
+        # re check the stuck conditions
+        atEdgeOfArena = abs(self.x) > 0.8 or abs(self.y) > 0.8
+        facingWall    = self.forward @ self.pos > 0
+        stopped       = np.linalg.norm( self.vel ) < 0.01
+
+        # if they arent still true then do nothing
+        if not (atEdgeOfArena and facingWall and stopped):
+            return
+
+        # set the wheels to reverse
+        self.setWheelSpeeds( -4.0, -4.0 )
+
+        # set the behaviour to nothing and wait for a bit before resuming the behaviour
+        self.schedule( 2000, lambda x=self.behaviour : self.setBehaviour(x) )
+        self.behaviour = lambda : None
+
+
     def recoverFromStuck(self):
 
         # sometimes the robot get stuck where the claw is on top of a block and the wheels are off the ground
@@ -497,6 +516,17 @@ class Jasmine(Robot):
 
             # just call releaseBlock to recover
             self.releaseBlock()
+
+        # sometimes we are facing the wall and trying to drive into it
+        atEdgeOfArena = abs(self.x) > 0.8 or abs(self.y) > 0.8
+        facingWall    = self.forward @ self.pos > 0
+        stopped       = np.linalg.norm( self.vel ) < 0.01
+
+        if atEdgeOfArena and facingWall and stopped:
+
+            # reverse for a while to recover
+            # call it after 2 seconds and only do it if we're still stuck
+            self.schedule( 2000, self.reverseFromWall )
 
 
     def mainLoop(self):
