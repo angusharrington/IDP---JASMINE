@@ -282,7 +282,7 @@ class Jasmine(Robot):
     def turnToDirection(self, direction, nextBehaviour = lambda : None):
 
         # get a value representing the amount we still need to turn
-        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 30, -4, 4 )
+        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 50, -7, 7 )
 
         # set the wheel speeds based on this value
         self.setWheelSpeeds( turnAmount, -turnAmount )
