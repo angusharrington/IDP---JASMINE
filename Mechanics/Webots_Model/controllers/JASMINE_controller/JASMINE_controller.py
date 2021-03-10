@@ -336,8 +336,8 @@ class Jasmine(Robot):
         self.clawMotor.setPosition( 0 )
 
         # a dict that contains all the points we need to search at
-        pointsOrder = { Colour.RED:   np.array([[0, 0, 0], [0.8, 0, 0], [0.8, 0, 0.8], [0, 0, 0.8], [-0.8, 0, 0.8]]),
-                        Colour.GREEN: np.array([[0, 0, 0], [0.8, 0, 0], [0.8, 0, 0.8], [0, 0, 0.8], [-0.8, 0, 0.8]]) }
+        pointsOrder = { Colour.RED:   np.array([[0.8, 0, 0], [0.8, 0, 0.8], [0, 0, 0.8], [-0.8, 0, 0.8]]),
+                        Colour.GREEN: np.array([[0.8, 0, 0], [0.8, 0, 0.8], [0, 0, 0.8], [-0.8, 0, 0.8]]) }
 
         # figure out where we have to go now
         pointToGoTo        = pointsOrder[self.colour][self.pointsSearched]
@@ -364,25 +364,11 @@ class Jasmine(Robot):
         if self.distances[-2, 1] == 0:
             return
 
-        # check if the right distance sensor detected a downwards step
-        if self.distances[-1, 1] - self.distances[-2,1] < -0.05:
+        # check if the right distance sensor detected a downwards step and we should ge the box
+        if self.distances[-1, 1] - self.distances[-2,1] < -0.05 and self.shouldGetBox():
 
             # record the time that this happened
             self.boxFirstEdgeTime = self.simTime
-
-            rot = np.array([[0, -1], [1, 0]])
-            straight = norm(np.array([self.forward[0], self.forward[2]]))
-            side = rot.dot(straight)
-            forwardDisp = straight*(self.distances[-1, 1]+0.25)
-            objLoc = self.pos + np.array([forwardDisp[0], 0, forwardDisp[1]]) + np.array([side[0], 0, side[1]])*0.07
-            greenSquare = [[0.2, -0.6], [0.2, -0.2], [-0.2, -0.2], [-0.2, -0.6]]
-            redSquare = [[0.2, 0.6], [0.2, 0.2], [-0.2, 0.2], [-0.2, 0.6]]
-            arena = [[1.15, 1.15], [1.15, -1.15], [-1.15, -1.15], [-1.15, 1.15]]
-
-            print(np.array([objLoc[0], objLoc[2]]), "ooh")
-            print(self.intersect(np.array([objLoc[0], objLoc[2]]), redSquare), "hello")
-            if self.intersect(np.array([objLoc[0], objLoc[2]]), greenSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), redSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), arena) == True:
-                self.inRightPlace = True
 
             
         # check if the left distance sensor detected an upwards step and we already detected a step from the other sensor
@@ -404,6 +390,22 @@ class Jasmine(Robot):
             # after a time of rotationTime, call self.startBoxApproach
             self.schedule( rotationTime, self.startBoxApproach )
 
+
+    def shouldGetBox(self):
+            
+        rot = np.array([[0, -1], [1, 0]])
+        straight = norm(np.array([self.forward[0], self.forward[2]]))
+        side = rot.dot(straight)
+        forwardDisp = straight*(self.distances[-1, 1]+0.25)
+        objLoc = self.pos + np.array([forwardDisp[0], 0, forwardDisp[1]]) + np.array([side[0], 0, side[1]])*0.07
+        greenSquare = [[0.2, -0.6], [0.2, -0.2], [-0.2, -0.2], [-0.2, -0.6]]
+        redSquare = [[0.2, 0.6], [0.2, 0.2], [-0.2, 0.2], [-0.2, 0.6]]
+        arena = [[1.15, 1.15], [1.15, -1.15], [-1.15, -1.15], [-1.15, 1.15]]
+
+        # print(np.array([objLoc[0], objLoc[2]]), "ooh")
+        # print(self.intersect(np.array([objLoc[0], objLoc[2]]), redSquare), "hello")
+        return self.intersect(np.array([objLoc[0], objLoc[2]]), greenSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), redSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), arena) == True
+            
 
     def startBoxApproach(self):
 
