@@ -38,6 +38,7 @@ class Jasmine(Robot):
         self.pos              = np.zeros( 3 )
         self.vel              = np.zeros( 3 )
         self.angle            = 0 # angle to x axis
+        self.angvel           = 0
         self.forward          = np.zeros( 3 ) # unit vector in the direction we are facing
         self.posHist          = np.zeros( (10, 3) ) # stores last 10 positions of robot - maybe unneccesary
         self.distances        = np.zeros( (10, 2) ) # last 10 distances, 10 rows of [leftDistance, rightDistance]
@@ -179,11 +180,14 @@ class Jasmine(Robot):
         # set the velocity using the last 2 positions in the position history array
         self.vel = ( self.posHist[-1] - self.posHist[-2] ) / ( self.timestep / 1000 )
 
-        # from the difference in gps readings, calculate the angle we are facing and update the forward vector
+        # from the difference in gps readings, calculate the new angle we are facing and update the forward vector
         gpsDifference = self.gpsOffset.getValues() - self.pos
+        newAngle      = np.arctan2( gpsDifference[2], gpsDifference[0] )
+        self.forward  = norm( gpsDifference )
 
-        self.angle   = np.arctan2( gpsDifference[2], gpsDifference[0] )
-        self.forward = norm( gpsDifference )
+        # also calculate the angular velocity from the difference in angles and set self.angle
+        self.angvel   = ( newAngle - self.angle ) / ( self.timestep / 1000 )
+        self.angle    = newAngle
 
 
     def updateRecieverEmitter(self):
@@ -344,6 +348,17 @@ class Jasmine(Robot):
 
     def spinAndFindBox(self):
 
+        # if in the next timestep we will cross 0 angle then move onto the next point to search
+        nextAngle = self.angle + self.angvel * ( self.timestep / 1000 )
+
+        if self.angle < 0 and nextAngle > 0:
+
+            # increment the number of points we've searched, set the direction cleared back to its initial value and call locationsRoute
+            self.directionCleared = np.array( [1,0,0] )
+            self.pointsSearched += 1
+            self.locationsRoute()
+
+
         # if the distances array is not yet initialised with data then return
         if self.distances[-2, 1] == 0:
             return
@@ -392,7 +407,7 @@ class Jasmine(Robot):
 
     def goToBox(self):
 
-        # when we detect light on one of the light sensors we have readched the box
+        # when we detect light on one of the light sensors we have reached the box
 
         if self.greenLevel > 0.99 or self.redLevel > 0.99:
 
