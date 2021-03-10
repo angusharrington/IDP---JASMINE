@@ -5,6 +5,7 @@ from enum import Enum
 import struct
 import sys
 
+
 # norm(v) returns v scaled to unit length
 norm = lambda v : v / np.linalg.norm(v)
 
@@ -47,8 +48,8 @@ class Jasmine(Robot):
         self.greenLevel       = 0.0
         self.redLevel         = 0.0
         self.boxFirstEdgeTime = 0
-        self.prev2vel         = np.zeros( 2 )
         self.receivedData     = np.array([])
+        self.otherRobot       = np.array([[0, 0], [0, 0]])
 
 
         # Robot dependant variables
@@ -180,8 +181,6 @@ class Jasmine(Robot):
 
         # set the velocity using the last 2 positions in the position history array
         self.vel = ( self.posHist[-1] - self.posHist[-2] ) / ( self.timestep / 1000 )
-        self.prev2vel[-2] = self.prev2vel[-1]        
-        self.prev2vel[-1] = np.linalg.norm(self.vel)
 
         # from the difference in gps readings, calculate the angle we are facing and update the forward vector
         gpsDifference = self.gpsOffset.getValues() - self.pos
@@ -189,12 +188,85 @@ class Jasmine(Robot):
         self.angle   = np.arctan2( gpsDifference[2], gpsDifference[0] )
         self.forward = norm( gpsDifference )
 
+        # send other robot position and velocity for collision avoidance (ignoring y co-ordinate)
+        posVelAndFor = struct.pack('ffffff', self.pos[0], self.pos[2], self.vel[0], self.vel[2], self.forward[0], self.forward[2])
+        self.emitter.send(posVelAndFor)
+
+
         # update received data
         if self.receiver.getQueueLength() > 0:
-
+            
             data = self.receiver.getData()
-            vector = np.asarray(struct.unpack("fff", data))
-            self.receivedData.append(vector)
+            if sys.getsizeof(data) == 57:
+                recPosAndVel = np.asarray(struct.unpack("ffffff", data))
+                # self.otherRobot = [[position], [velocity], [forward]]
+                self.otherRobot = np.array([[recPosAndVel[0], recPosAndVel[1]], [recPosAndVel[2], recPosAndVel[3]], [recPosAndVel[4], recPosAndVel[5]]])
+
+            if sys.getsizeof(data) == 45:
+
+                vector = np.asarray(struct.unpack("fff", data))
+                self.receivedData = np.append(self.receivedData, vector)
+
+
+    # This function should be called by 1 robot only every frame
+    def collisionAvoid(self):
+
+        # produce coordinates for areas both robots will cover over the next second, if these overlap, stop 1 robot
+        # thinking 1 second is too big
+        pos2 = self.pos + self.vel*1
+        pos22 = self.otherRobot[0] + self.otherRobot[1]*1
+
+        # 90degree CW rotation
+        rot = np.array([[0, 1], [-1, 0]])
+
+        front1 = norm(np.array([self.forward[0], self.forward[2]]))
+        front2 = norm(self.otherRobot[2])
+
+        # dimensions (complete guesses, waiting for confirmation from Chris)
+        gpsToFront = 0.23
+        gpsToSide  = 0.05
+        gpsToBack  = 0.1
+
+        # coords of this robot
+        p1 = [[self.pos + gpsToSide*(rot.dot(front1)) - front1*gpsToBack], [self.pos - gpsToSide*(rot.dot(front1)) - front1*gpsToBack], [pos2 + gpsToSide*(rot.dot(front1)) + front1*gpsToFront], [pos2 - gpsToSide*(rot.dot(front1)) + front1*gpsToFront]]
+        # coords of other robot
+        p2 = [[self.otherRobot[0] + gpsToSide*(rot.dot(front2)) - front2*gpsToBack], [self.otherRobot[0] - gpsToSide*(rot.dot(front2)) - front2*gpsToBack], [pos22 + gpsToSide*(rot.dot(front2)) + front2*gpsToFront], [pos22 - gpsToSide*(rot.dot(front2)) + front2*gpsToFront]]
+
+        def intersect(point, poly):
+
+            x = point[0]
+            y = point[1]
+            vertx = [polygon[t][0] for t in range(4)]
+            verty = [polygon[t][1] for t in range(4)]
+
+
+            n = 4
+            inside = False
+            p2x = 0.0
+            p2y = 0.0
+            xints = 0.0
+            p1x,p1y = poly[0]
+            for i in range(n+1):
+                p2x,p2y = poly[i % n]
+                if y > min(p1y,p2y):
+                    if y <= max(p1y,p2y):
+                        if x <= max(p1x,p2x):
+                            if p1y != p2y:
+                                xints = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
+                            if p1x == p2x or x <= xints:
+                                inside = not inside
+                p1x,p1y = p2x,p2y
+
+            return inside
+
+        for i in p1:
+            if intersect(i, p2) is True:
+                self.setWheelSpeeds(0,0)
+        
+        for j in p2:
+            if intersect(j, p1) is True:
+                self.setWheelSpeeds(0, 0)
+
 
 
 
@@ -245,7 +317,7 @@ class Jasmine(Robot):
 
         # set motors to spin
         self.setWheelSpeeds( 1.0, -1.0 )
-        print(self.forward)
+        #print(self.forward)
 
         # start the spinning behaviour
         self.behaviour = self.spinAndFindBox
