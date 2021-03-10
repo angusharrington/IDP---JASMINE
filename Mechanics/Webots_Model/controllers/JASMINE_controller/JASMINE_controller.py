@@ -54,9 +54,7 @@ class Jasmine(Robot):
         self.pointsSearched   = 0 # number of points in the grid that we have spun around completely and cleared
         self.directionCleared = np.array( [1,0,0] ) # direction that we have cleared up to on the current point - starting from 1, 0, 0
         self.inRightPlace     = False
-        self.inTransit        = False
-        self.forSquareAvoid1  = np.zeros( 3 )
-        self.forSquareAvoid2  = np.zeros( 3 )
+        self.goingHome        = False
  
 
         # Robot dependant variables
@@ -324,13 +322,13 @@ class Jasmine(Robot):
         positionNext = np.array([positionNext[0], positionNext[2]])
         xzpos = np.array([self.pos[0], self.pos[1]])
 
-        if self.intersect(positionNext, greenSquare) is True and destination != self.home and self.intersect(xzpos, greenSquare) is False:
+        if self.intersect(positionNext, greenSquare) is True and self.goingHome is False and self.intersect(xzpos, greenSquare) is False:
             self.setWheelSpeeds(2, -2) 
             self.schedule(0.4, self.setWheelSpeeds(5, 5))
             self.schedule(0.5, self.setWheelSpeeds(0, 0))
             self.behaviour = lambda : self.goToPoint( destination, self.startSpin, directionOnceArrived )
 
-        if self.intersect(positionNext, redSquare) is True and destination != self.home and self.intersect(xzpos, redSquare) is False:
+        if self.intersect(positionNext, redSquare) is True and self.goingHome is False and self.intersect(xzpos, redSquare) is False:
             self.setWheelSpeeds(2, -2)
             self.schedule(0.4, self.setWheelSpeeds(5, 5))
             self.schedule(0.5, self.setWheelSpeeds(0, 0))
@@ -338,7 +336,7 @@ class Jasmine(Robot):
 
         # if we're within the tolerance distance to the destination then we have arrived
         arrived = np.linalg.norm( direction ) < tolerance
-
+        self.goingHome = False
         # if we want to face a certain direction once we arrive then start the turnToDirection behaviour
         if arrived and directionOnceArrived is not None:
             self.behaviour = lambda : self.turnToDirection( directionOnceArrived, nextBehaviour )
@@ -493,6 +491,7 @@ class Jasmine(Robot):
 
             self.behaviour = lambda : None
             self.schedule( 500, lambda : self.setBehaviour( lambda : self.goToPoint( self.home, self.releaseBlock, tolerance=0.2 ) ) )
+            self.goingHome = True
 
         else:
 
