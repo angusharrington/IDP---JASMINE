@@ -307,10 +307,10 @@ class Jasmine(Robot):
         direction    = destination - self.pos
         direction[1] = 0
 
-        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 30, -4, 4 )
+        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 50, -7, 7 )
 
         # get a baseSpeed value - slow if we're close to the destination but not facing it and otherwise fast
-        baseSpeed = 8.0 - min( abs(turnAmount) * 10 * (mag(direction) < 0.1),  8 )
+        baseSpeed = 12.0 - min( abs(turnAmount) * 15 * (mag(direction) < 0.1),  12 )
         greenSquare = [[0.2, -0.6], [0.2, -0.2], [-0.2, -0.2], [-0.2, -0.6]]
         redSquare = [[0.2, 0.6], [0.2, 0.2], [-0.2, 0.2], [-0.2, 0.6]]
 
@@ -354,8 +354,8 @@ class Jasmine(Robot):
         self.clawMotor.setPosition( 0 )
 
         # all the positions to spin around at
-        spinPositions = np.array( [[ 0.8, 0, 0], [ 0.8, 0,  0.8], [0, 0,  0.8], [-0.8, 0,  0.8],
-                                   [-0.8, 0, 0], [-0.8, 0, -0.8], [0, 0, -0.8], [ 0.8, 0, -0.8] ] )
+        spinPositions = np.array( [[ 0.79, 0, 0], [ 0.8, 0,  0.8], [0, 0,  0.79], [-0.8, 0,  0.8],
+                                   [-0.79, 0, 0], [-0.8, 0, -0.8], [0, 0, -0.79], [ 0.8, 0, -0.8] ] )
 
         # if its the green robot use the same array rotated 4 spaces along
         if self.colour == Colour.GREEN:
