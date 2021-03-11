@@ -320,17 +320,17 @@ class Jasmine(Robot):
         deflectRed    = 15 * ( norm(toRedCentre  ) @ self.forward + 1 ) * np.sign( np.cross( toRedCentre  , self.forward ) @ np.array( [0,-1,0] ) )
         deflectGreen  = 15 * ( norm(toGreenCentre) @ self.forward + 1 ) * np.sign( np.cross( toGreenCentre, self.forward ) @ np.array( [0,-1,0] ) )
 
-        if mag( destination - redCentre   ) < 0.1 or mag( direction ) < 0.4 or mag( toRedCentre   ) > 0.7 or self.z < 0:
+        if mag( destination - redCentre   ) < 0.1 or mag( direction ) < 0.4 or mag( toRedCentre   ) > 0.4 or self.z < 0:
             deflectRed = 0
 
-        if mag( destination - greenCentre ) < 0.1 or mag( direction ) < 0.4 or mag( toGreenCentre ) > 0.7 or self.z > 0:
+        if mag( destination - greenCentre ) < 0.1 or mag( direction ) < 0.4 or mag( toGreenCentre ) > 0.4 or self.z > 0:
             deflectGreen = 0
 
         # how much we want the robot to turn
         turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 50 + deflectGreen + deflectRed, -5, 5 )
 
         # get a baseSpeed value - slow if we're close to the destination but not facing it and otherwise fast
-        baseSpeed = 12.0 - min( abs(turnAmount) * 15 * (mag(direction) < 0.1),  12 )
+        baseSpeed = 10.0 - min( abs(turnAmount) * 15 * (mag(direction) < 0.15),  10 )
 
         # set the wheel speeds based on these values
         self.setWheelSpeeds( baseSpeed + turnAmount, baseSpeed - turnAmount )
@@ -360,10 +360,15 @@ class Jasmine(Robot):
         if self.colour == Colour.GREEN:
             spinPositions = np.roll( spinPositions, 3, axis=0 )
 
+        # when we have searched all the points go home
+        if self.pointsSearched == 8:
+            
+            self.behaviour = lambda : self.goToPoint( self.home, self.stop, tolerance=0.1 )
+            return
+
         # figure out where we have to go now
         pointToGoTo        = spinPositions[self.pointsSearched]
         directionToStartAt = self.directionCleared
-
 
         # start going to the next point
         self.behaviour = lambda : self.goToPoint( pointToGoTo, self.startSpin, directionToStartAt )
@@ -481,7 +486,7 @@ class Jasmine(Robot):
             self.schedule( 160, lambda : self.setBehaviour( self.checkBox ) )
 
         # if we have been driving for too long then give up
-        if self.simTime - startTime > 2500:
+        if self.simTime - startTime > 3500:
 
             self.locationsRoute()
 
