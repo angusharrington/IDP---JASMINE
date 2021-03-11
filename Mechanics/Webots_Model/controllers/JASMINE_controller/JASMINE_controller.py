@@ -298,7 +298,7 @@ class Jasmine(Robot):
     def turnToDirection(self, direction, nextBehaviour = lambda : None):
 
         # get a value representing the amount we still need to turn
-        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 50, -7, 7 )
+        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 50, -5, 5 )
 
         # set the wheel speeds based on this value
         self.setWheelSpeeds( turnAmount, -turnAmount )
@@ -314,35 +314,26 @@ class Jasmine(Robot):
         direction    = destination - self.pos
         direction[1] = 0
 
-        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 50, -7, 7 )
+        toRedCentre   = redCentre   - self.pos
+        toGreenCentre = greenCentre - self.pos
+
+        deflectRed    = 15 * ( norm(toRedCentre  ) @ self.forward + 1 ) * np.sign( np.cross( toRedCentre  , self.forward ) @ np.array( [0,-1,0] ) )
+        deflectGreen  = 15 * ( norm(toGreenCentre) @ self.forward + 1 ) * np.sign( np.cross( toGreenCentre, self.forward ) @ np.array( [0,-1,0] ) )
+
+        if mag( destination - redCentre   ) < 0.1 or mag( direction ) < 0.4 or mag( toRedCentre   ) > 0.7 or self.z < 0:
+            deflectRed = 0
+
+        if mag( destination - greenCentre ) < 0.1 or mag( direction ) < 0.4 or mag( toGreenCentre ) > 0.7 or self.z > 0:
+            deflectGreen = 0
+
+        # how much we want the robot to turn
+        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 50 + deflectGreen + deflectRed, -5, 5 )
 
         # get a baseSpeed value - slow if we're close to the destination but not facing it and otherwise fast
         baseSpeed = 12.0 - min( abs(turnAmount) * 15 * (mag(direction) < 0.1),  12 )
 
-        greenSquare = [[0.2, -0.6], [0.2, -0.2], [-0.2, -0.2], [-0.2, -0.6]]
-        redSquare   = [[0.2,  0.6], [0.2,  0.2], [-0.2,  0.2], [-0.2,  0.6]]
-
-        xzposNose = 0.3*self.forward + self.pos
-        xzposNose = np.array([xzposNose[0], xzposNose[2]])        
-
-        if False and self.intersect(xzposNose, greenSquare) is False and self.intersect(xzposNose, redSquare) is False:
-
-            # get a value that is large when we are heading into the red square
-            toRedSquare    = redCentre - self.pos
-            avoidRedSquare = np.clip( ( 1.4 - mag( toRedSquare ) ) * ( norm(toRedSquare) @ self.forward ), 0, 0.2 ) * 10 * ( mag(destination - redCentre) > 0.1 )
-
-            # get a value that is large when we are heading into the green square
-            toGreenSquare    = greenCentre - self.pos
-            avoidGreenSquare = np.clip( ( 1.4 - mag( toGreenSquare ) ) * ( norm(toGreenSquare) @ self.forward ), 0, 0.2 ) * 10 * ( mag(destination - greenCentre) > 0.1 )
-
-            print( sys.argv[1], baseSpeed + turnAmount + avoidRedSquare + avoidGreenSquare, baseSpeed - turnAmount - avoidRedSquare - avoidGreenSquare )
-
-            # set the wheel speeds based on these values
-            self.setWheelSpeeds( baseSpeed + turnAmount + avoidRedSquare + avoidGreenSquare, baseSpeed - turnAmount - avoidRedSquare - avoidGreenSquare )
-        
-        else:
-            self.setWheelSpeeds( baseSpeed + turnAmount, baseSpeed - turnAmount )
-
+        # set the wheel speeds based on these values
+        self.setWheelSpeeds( baseSpeed + turnAmount, baseSpeed - turnAmount )
 
         # if we're within the tolerance distance to the destination then we have arrived
         arrived = np.linalg.norm( direction ) < tolerance
@@ -365,9 +356,9 @@ class Jasmine(Robot):
         spinPositions = np.array( [[0, 0, -0.79], [ 0.8, 0, -0.8], [ 0.79, 0, 0], [ 0.8, 0,  0.8],
                                    [0, 0,  0.79], [-0.8, 0,  0.8], [-0.79, 0, 0], [-0.8, 0, -0.8]] )
 
-        # if its the green robot use the same array rotated 4 spaces along
+        # if its the green robot use the same array rotated along
         if self.colour == Colour.GREEN:
-            spinPositions = np.roll( spinPositions, 4, axis=0 )
+            spinPositions = np.roll( spinPositions, 3, axis=0 )
 
         # figure out where we have to go now
         pointToGoTo        = spinPositions[self.pointsSearched]
@@ -461,6 +452,7 @@ class Jasmine(Robot):
         p4 = np.ndarray.tolist(centre - gpsToSide*(rot.dot(ahead)) + ahead*gpsToFront)
 
         fourCorners = [p1, p2, p3, p4] 
+
         # get the distances to all the other colour boxes
         closeToOtherColourBoxes = [ mag(objLoc - box) < 0.05 for box in self.otherColourBoxes ]
         # if the block is too close to any we've already seen then ignore it unless the simulation has been going for a long time
