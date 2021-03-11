@@ -448,12 +448,14 @@ class Jasmine(Robot):
         gpsToSide  = 0.085
         gpsToBack  = 0.15
 
+        p1 = np.ndarray.tolist(centre + gpsToSide*(rot.dot(ahead)) - ahead*gpsToBack)
+        p2 = np.ndarray.tolist(centre - gpsToSide*(rot.dot(ahead)) - ahead*gpsToBack)
+        p3 = np.ndarray.tolist(centre + gpsToSide*(rot.dot(ahead)) + ahead*gpsToFront)
+        p4 = np.ndarray.tolist(centre - gpsToSide*(rot.dot(ahead)) + ahead*gpsToFront)
 
-        fourCorners = [[centre + gpsToSide*(rot.dot(ahead)) - ahead*gpsToBack], [centre - gpsToSide*(rot.dot(ahead)) - ahead*gpsToBack], [centre + gpsToSide*(rot.dot(ahead)) + ahead*gpsToFront], [centre - gpsToSide*(rot.dot(ahead)) + ahead*gpsToFront]]
-
+        fourCorners = [p1, p2, p3, p4] 
         # get the distances to all the other colour boxes
         closeToOtherColourBoxes = [ mag(objLoc - box) < 0.05 for box in self.otherColourBoxes ]
-
         # if the block is too close to any we've already seen then ignore it unless the simulation has been going for a long time
         # if True in closeToOtherColourBoxes and self.simTime < 12000:
         #     return False
