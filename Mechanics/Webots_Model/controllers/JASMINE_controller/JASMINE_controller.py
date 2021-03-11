@@ -47,7 +47,7 @@ class Jasmine(Robot):
         self.clawAngle        = 0.0
         self.simTime          = self.timestep
         self.scheduleTuples   = []
-        self.behaviour        = self.locationsRoute
+        self.behaviour        = lambda : None
         self.greenLevel       = 0.0
         self.redLevel         = 0.0
         self.boxFirstEdgeTime = None
@@ -283,6 +283,16 @@ class Jasmine(Robot):
     # --- Behaviours ---
     # functions that can be assigned to the self.behaviour variable to be called once per frame
     # and control what the robot does at different parts of the process
+
+
+    def start(self):
+
+        # at the start we need to move the robots in opposite directions so they can drive to their start points
+        speed = 5 if self.colour == Colour.RED else -5
+        self.setWheelSpeeds( speed, speed )
+
+        # set locationsRoute to be called after a bit
+        self.schedule( 2000, self.locationsRoute )
 
 
     def turnToDirection(self, direction, nextBehaviour = lambda : None):
@@ -587,6 +597,8 @@ class Jasmine(Robot):
 
 
     def mainLoop(self):
+
+        self.start()
 
         # loop until simulation end
         while self.step( self.timestep ) != -1:
