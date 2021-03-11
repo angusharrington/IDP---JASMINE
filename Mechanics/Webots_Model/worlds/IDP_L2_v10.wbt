@@ -33,35 +33,35 @@ Floor {
   }
 }
 target {
-  translation -0.639 0.05 1.03
+  translation 0.131 0.05 1.03
   name "target(9)"
 }
 target {
-  translation 0.0325684 0.05 0.0270419
+  translation 0.265768 0.05 0.0231193
   rotation 0 1 0 -0.523595307179586
   name "target(8)"
 }
 target {
-  translation 0.0567 0.05 -0.9486
+  translation -0.6133 0.05 -0.4386
   name "target(7)"
 }
 target {
-  translation 0.927666 0.05 0.244708
+  translation -0.312334 0.05 0.244708
   rotation 0 1 0 3.14159
   name "target(6)"
 }
 target {
-  translation -0.117397 0.05 0.871692
+  translation -0.117397 0.05 -0.728308
   colour 0 1 0
   name "target(5)"
 }
 target {
-  translation -1.0911 0.05 -0.7727
+  translation 0.2689 0.05 -0.7727
   colour 0 1 0
   name "target(1)"
 }
 target {
-  translation -0.862605 0.0568942 0.3142
+  translation 0.637395 0.0568941 -0.3858
   rotation 0 0 -1 8.23753e-07
   colour 0 1 0
   name "target(2)"
@@ -145,9 +145,11 @@ TexturedBackgroundLight {
   texture "empty_office"
 }
 JASMINE_v4 {
+  hidden rotation_9 -0.9774888301587037 -1.4391696893510735e-07 0.21098717239431442 1.5158897891376391e-05
   translation -0.05 0.05 0.4
 }
 JASMINE_v4 {
+  hidden rotation_9 -0.9774888933989492 -1.4391697827006992e-07 0.21098687940646235 1.5158897891376391e-05
   translation -0.0356108 0.05 -0.399739
   rotation 0 1 0 1.62771e-06
   baseColor 0 1 0
