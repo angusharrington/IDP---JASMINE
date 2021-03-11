@@ -317,7 +317,7 @@ class Jasmine(Robot):
         xzposNose = 0.3*self.forward + self.pos
         xzposNose = np.array([xzposNose[0], xzposNose[2]])        
 
-        if self.goingHome is False and self.intersect(xzposNose, greenSquare) is False and self.intersect(xzposNose, redSquare) is False:
+        if False and self.goingHome is False and self.intersect(xzposNose, greenSquare) is False and self.intersect(xzposNose, redSquare) is False:
 
 
 
@@ -420,7 +420,7 @@ class Jasmine(Robot):
             self.inRightPlace = False
 
             # open the claw ready to get the box
-            self.clawMotor.setPosition( 1.8 )
+            self.clawMotor.setPosition( 0.5 )
 
             # after a time of rotationTime, call self.startBoxApproach
             self.schedule( rotationTime, self.startBoxApproach )
@@ -479,7 +479,7 @@ class Jasmine(Robot):
         if self.greenLevel > 0.99 or self.redLevel > 0.99:
 
             self.behaviour = lambda : None
-            self.schedule( 200, lambda : self.setBehaviour( self.checkBox ) )
+            self.schedule( 160, lambda : self.setBehaviour( self.checkBox ) )
 
         # if we have been driving for too long then give up
         if self.simTime - startTime > 2500:
@@ -525,7 +525,7 @@ class Jasmine(Robot):
     def releaseBlock(self):
 
         # lift the claw and reverse the motors
-        self.clawMotor.setPosition( 1.8 )
+        self.clawMotor.setPosition( 0.5 )
         self.setWheelSpeeds( -7.0, -7.0 )
         self.goingHome = False
 
