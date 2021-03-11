@@ -5,7 +5,6 @@ from enum import Enum
 import struct
 import sys
 
-
 # mag(v) returns the magnitude of v
 mag = lambda v : np.linalg.norm(v)
 
@@ -56,8 +55,6 @@ class Jasmine(Robot):
         self.otherRobot       = np.array([[0, 0], [0, 0], [0, 0]])
         self.pointsSearched   = 0 # number of points in the grid that we have spun around completely and cleared
         self.directionCleared = np.array( [1,0,0] ) # direction that we have cleared up to on the current point - starting from 1, 0, 0
-        self.inRightPlace     = False
-        self.goingHome        = False
         self.ourColourBoxes   = []
         self.otherColourBoxes = []
  
@@ -311,15 +308,14 @@ class Jasmine(Robot):
 
         # get a baseSpeed value - slow if we're close to the destination but not facing it and otherwise fast
         baseSpeed = 12.0 - min( abs(turnAmount) * 15 * (mag(direction) < 0.1),  12 )
+
         greenSquare = [[0.2, -0.6], [0.2, -0.2], [-0.2, -0.2], [-0.2, -0.6]]
-        redSquare = [[0.2, 0.6], [0.2, 0.2], [-0.2, 0.2], [-0.2, 0.6]]
+        redSquare   = [[0.2,  0.6], [0.2,  0.2], [-0.2,  0.2], [-0.2,  0.6]]
 
         xzposNose = 0.3*self.forward + self.pos
         xzposNose = np.array([xzposNose[0], xzposNose[2]])        
 
-        if False and self.goingHome is False and self.intersect(xzposNose, greenSquare) is False and self.intersect(xzposNose, redSquare) is False:
-
-
+        if False and self.intersect(xzposNose, greenSquare) is False and self.intersect(xzposNose, redSquare) is False:
 
             # get a value that is large when we are heading into the red square
             toRedSquare    = redCentre - self.pos
@@ -328,6 +324,8 @@ class Jasmine(Robot):
             # get a value that is large when we are heading into the green square
             toGreenSquare    = greenCentre - self.pos
             avoidGreenSquare = np.clip( ( 1.4 - mag( toGreenSquare ) ) * ( norm(toGreenSquare) @ self.forward ), 0, 0.2 ) * 10 * ( mag(destination - greenCentre) > 0.1 )
+
+            print( sys.argv[1], baseSpeed + turnAmount + avoidRedSquare + avoidGreenSquare, baseSpeed - turnAmount - avoidRedSquare - avoidGreenSquare )
 
             # set the wheel speeds based on these values
             self.setWheelSpeeds( baseSpeed + turnAmount + avoidRedSquare + avoidGreenSquare, baseSpeed - turnAmount - avoidRedSquare - avoidGreenSquare )
@@ -354,8 +352,8 @@ class Jasmine(Robot):
         self.clawMotor.setPosition( 0 )
 
         # all the positions to spin around at
-        spinPositions = np.array( [[ 0.79, 0, 0], [ 0.8, 0,  0.8], [0, 0,  0.79], [-0.8, 0,  0.8],
-                                   [-0.79, 0, 0], [-0.8, 0, -0.8], [0, 0, -0.79], [ 0.8, 0, -0.8] ] )
+        spinPositions = np.array( [[0, 0, -0.79], [ 0.8, 0, -0.8], [ 0.79, 0, 0], [ 0.8, 0,  0.8],
+                                   [0, 0,  0.79], [-0.8, 0,  0.8], [-0.79, 0, 0], [-0.8, 0, -0.8]] )
 
         # if its the green robot use the same array rotated 4 spaces along
         if self.colour == Colour.GREEN:
@@ -417,7 +415,6 @@ class Jasmine(Robot):
 
             # clear the boxFirstEdgeTime as we are done with it
             self.boxFirstEdgeTime = None
-            self.inRightPlace = False
 
             # open the claw ready to get the box
             self.clawMotor.setPosition( 0.5 )
@@ -486,6 +483,11 @@ class Jasmine(Robot):
 
             self.locationsRoute()
 
+        # if we drive into the home squares by accident then reverse out
+        if mag( self.pos - greenCentre ) < 0.2 or mag( self.pos - redCentre ) < 0.2:
+
+            self.releaseBlock()
+
 
     def checkBox(self):
 
@@ -508,7 +510,6 @@ class Jasmine(Robot):
             
         # if we picked up the right colour then bring it back, otherwise continue the search
         if colour == self.colour:
-            self.goingHome = True
             self.behaviour = lambda : None
             self.schedule( 500, lambda : self.setBehaviour( lambda : self.goToPoint( self.home, self.releaseBlock, tolerance=0.2 ) ) )
             
@@ -527,7 +528,6 @@ class Jasmine(Robot):
         # lift the claw and reverse the motors
         self.clawMotor.setPosition( 0.5 )
         self.setWheelSpeeds( -7.0, -7.0 )
-        self.goingHome = False
 
         # schedule locationsRoute and set behaviour to nothing
         self.behaviour = lambda : None
@@ -550,8 +550,8 @@ class Jasmine(Robot):
     def reverseFromWall(self):
 
         # re check the stuck conditions
-        atEdgeOfArena = abs(self.x) > 0.8 or abs(self.y) > 0.8
-        facingWall    = self.forward @ self.pos > 0
+        atEdgeOfArena = abs(self.x) > 0.8 or abs(self.z) > 0.8
+        facingWall    = self.forward @ norm(self.pos) > 0
         stopped       = np.linalg.norm( self.vel ) < 0.01
 
         # if they arent still true then do nothing
@@ -575,9 +575,9 @@ class Jasmine(Robot):
             self.releaseBlock()
 
         # sometimes we are facing the wall and trying to drive into it
-        atEdgeOfArena = abs(self.x) > 0.8 or abs(self.y) > 0.8
-        facingWall    = self.forward @ self.pos > 0
-        stopped       = np.linalg.norm( self.vel ) < 0.01
+        atEdgeOfArena = abs(self.x) > 0.8 or abs(self.z) > 0.8
+        facingWall    = self.forward @ norm(self.pos) > 0
+        stopped       = np.linalg.norm( self.vel ) < 0.03
 
         if atEdgeOfArena and facingWall and stopped:
 
