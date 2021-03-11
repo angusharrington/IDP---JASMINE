@@ -557,7 +557,7 @@ class Jasmine(Robot):
     def reverseFromWall(self):
 
         # re check the stuck conditions
-        atEdgeOfArena = abs(self.x) > 0.8 or abs(self.z) > 0.8
+        atEdgeOfArena = abs(self.x) > 0.87 or abs(self.z) > 0.87
         facingWall    = self.forward @ norm(self.pos) > 0
         stopped       = np.linalg.norm( self.vel ) < 0.01
 
@@ -582,15 +582,15 @@ class Jasmine(Robot):
             self.releaseBlock()
 
         # sometimes we are facing the wall and trying to drive into it
-        atEdgeOfArena = abs(self.x) > 0.8 or abs(self.z) > 0.8
+        atEdgeOfArena = abs(self.x) > 0.87 or abs(self.z) > 0.87
         facingWall    = self.forward @ norm(self.pos) > 0
         stopped       = np.linalg.norm( self.vel ) < 0.03
 
         if atEdgeOfArena and facingWall and stopped:
 
             # reverse for a while to recover
-            # call it after 2 seconds and only do it if we're still stuck
-            self.schedule( 2000, self.reverseFromWall )
+            # call it after 4 seconds and only do it if we're still stuck
+            self.schedule( 4000, self.reverseFromWall )
 
 
     def mainLoop(self):
@@ -615,7 +615,8 @@ class Jasmine(Robot):
             # recover from stuck in case we are
             self.recoverFromStuck()
 
-            # can print position and velocity
+            # can print current behaviour, position and velocity
+            # print( sys.argv[1], self.behaviour )
             # print( "pos: " + " ".join( ["%.2f" % v for v in self.pos] ) )
             # print( "vel: " + " ".join( ["%.2f" % v for v in self.vel] ) )
 
