@@ -316,9 +316,11 @@ class Jasmine(Robot):
 
         toRedCentre   = redCentre   - self.pos
         toGreenCentre = greenCentre - self.pos
+        toOtherRobot  = np.array([self.otherRobot[0], 0, self.otherRobot[1]]) - self.pos
 
         deflectRed    = 15 * ( norm(toRedCentre  ) @ self.forward + 1 ) * np.sign( np.cross( toRedCentre  , self.forward ) @ np.array( [0,-1,0] ) )
         deflectGreen  = 15 * ( norm(toGreenCentre) @ self.forward + 1 ) * np.sign( np.cross( toGreenCentre, self.forward ) @ np.array( [0,-1,0] ) )
+        deflectRobot  = 15 * ( norm(toOtherRobot ) @ self.forward + 1 ) * np.sign( np.cross( toOtherRobot , self.forward ) @ np.array( [0,-1,0] ) )
 
         if mag( destination - redCentre   ) < 0.1 or mag( direction ) < 0.4 or mag( toRedCentre   ) > 0.4 or self.z < 0:
             deflectRed = 0
@@ -326,8 +328,11 @@ class Jasmine(Robot):
         if mag( destination - greenCentre ) < 0.1 or mag( direction ) < 0.4 or mag( toGreenCentre ) > 0.4 or self.z > 0:
             deflectGreen = 0
 
+        if mag( toOtherRobot ) > 0.4:
+            deflectRobot = 0
+
         # how much we want the robot to turn
-        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 50 + deflectGreen + deflectRed, -5, 5 )
+        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 50 + deflectGreen + deflectRed + deflectRobot, -5, 5 )
 
         # get a baseSpeed value - slow if we're close to the destination but not facing it and otherwise fast
         baseSpeed = 10.0 - min( abs(turnAmount) * 15 * (mag(direction) < 0.15),  10 )
