@@ -296,6 +296,9 @@ class Jasmine(Robot):
         if mag( destination - greenCentre ) < 0.1 or mag( direction ) < 0.4 or mag( toGreenCentre ) > 0.4 or self.z > 0:
             deflectGreen = 0
 
+        if mag( toOtherRobot ) > 0.4:
+            deflectRobot = 0
+
         # how much we want the robot to turn
         turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 50 + deflectGreen + deflectRed + deflectRobot, -5, 5 )
 
