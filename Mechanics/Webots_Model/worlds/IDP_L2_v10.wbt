@@ -18,8 +18,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation 0.41929116928906346 -0.7424372936430047 -0.5224765835559148 4.342836064076716
-  position 2.98305533469386 7.052021883764027 -0.35519652055886475
+  orientation 0.4651525213211562 -0.7244942463942813 -0.5086661172617596 4.442643875053086
+  position 3.0660628685148756 7.034041757698846 -0.12667936315386435
   followType "Mounted Shot"
 }
 Background {
@@ -33,41 +33,41 @@ Floor {
   }
 }
 target {
-  translation 0.131 0.05 1.03
+  translation 0.7396 0.05 1.0751
   name "target(9)"
 }
 target {
-  translation 0.265768 0.05 0.0231193
+  translation -0.3839 0.05 0.42
   rotation 0 1 0 -0.523595307179586
   name "target(8)"
 }
 target {
-  translation -0.6133 0.05 -0.4386
+  translation -0.8766 0.05 -0.8046
   name "target(7)"
 }
 target {
-  translation -0.312334 0.05 0.244708
+  translation 0.9714 0.05 1.1059
   rotation 0 1 0 3.14159
   name "target(6)"
 }
 target {
-  translation -0.117397 0.05 -0.728308
+  translation 0.311 0.05 1.0743
   colour 0 1 0
   name "target(5)"
 }
 target {
-  translation 0.2689 0.05 -0.7727
+  translation -0.9458 0.05 -0.0344
   colour 0 1 0
   name "target(1)"
 }
 target {
-  translation 0.637395 0.0568941 -0.3858
+  translation -0.5205 0.0568941 0.7057
   rotation 0 0 -1 8.23753e-07
   colour 0 1 0
   name "target(2)"
 }
 target {
-  translation 1.0199 0.05 -1.1002
+  translation 0.1102 0.05 -0.8416
   colour 0 1 0
   name "target(3)"
 }
@@ -145,11 +145,11 @@ TexturedBackgroundLight {
   texture "empty_office"
 }
 JASMINE_v4 {
-  hidden rotation_9 -0.9774888301587037 -1.4391696893510735e-07 0.21098717239431442 1.5158897891376391e-05
+  hidden rotation_9 -0.9774888286653032 -1.4391696871523202e-07 0.21098717931313524 1.5158897891376391e-05
   translation -0.05 0.05 0.4
 }
 JASMINE_v4 {
-  hidden rotation_9 -0.9774888933989492 -1.4391697827006992e-07 0.21098687940646235 1.5158897891376391e-05
+  hidden rotation_9 -0.9774888918967649 -1.4391697804890133e-07 0.21098688636598664 1.5158897891376391e-05
   translation -0.0356108 0.05 -0.399739
   rotation 0 1 0 1.62771e-06
   baseColor 0 1 0

@@ -241,38 +241,6 @@ class Jasmine(Robot):
 
         return inside
 
-    # This function should be called by 1 robot only every frame
-    def collisionAvoid(self):
-
-        # produce coordinates for areas both robots will cover over the next 0.5 seconds, if these overlap, stop 1 robot
-
-        pos2 = self.pos + self.vel*0.5
-        pos22 = self.otherRobot[0] + self.otherRobot[1]*0.5
-
-        # 90degree CW rotation
-        rot = np.array([[0, -1], [1, 0]])
-
-        front1 = norm(np.array([self.forward[0], self.forward[2]]))
-        front2 = norm(self.otherRobot[2])
-
-        gpsToFront = 0.22
-        gpsToSide  = 0.075
-        gpsToBack  = 0.1
-
-        # coords of this robot
-        p1 = [[self.pos + gpsToSide*(rot.dot(front1)) - front1*gpsToBack], [self.pos - gpsToSide*(rot.dot(front1)) - front1*gpsToBack], [pos2 + gpsToSide*(rot.dot(front1)) + front1*gpsToFront], [pos2 - gpsToSide*(rot.dot(front1)) + front1*gpsToFront]]
-        # coords of other robot
-        p2 = [[self.otherRobot[0] + gpsToSide*(rot.dot(front2)) - front2*gpsToBack], [self.otherRobot[0] - gpsToSide*(rot.dot(front2)) - front2*gpsToBack], [pos22 + gpsToSide*(rot.dot(front2)) + front2*gpsToFront], [pos22 - gpsToSide*(rot.dot(front2)) + front2*gpsToFront]]
-
-        for i in p1:
-            if self.intersect(i, p2) is True:
-                self.setWheelSpeeds(0,0)
-        
-        for j in p2:
-            if self.intersect(j, p1) is True:
-                self.setWheelSpeeds(0, 0)
-
-
     def updateDistance(self):
 
         # add the distance sensors reading to the distances list
@@ -316,9 +284,11 @@ class Jasmine(Robot):
 
         toRedCentre   = redCentre   - self.pos
         toGreenCentre = greenCentre - self.pos
+        toOtherRobot  = np.array([self.otherRobot[0][0], 0, self.otherRobot[0][1]]) - self.pos
 
         deflectRed    = 15 * ( norm(toRedCentre  ) @ self.forward + 1 ) * np.sign( np.cross( toRedCentre  , self.forward ) @ np.array( [0,-1,0] ) )
         deflectGreen  = 15 * ( norm(toGreenCentre) @ self.forward + 1 ) * np.sign( np.cross( toGreenCentre, self.forward ) @ np.array( [0,-1,0] ) )
+        deflectRobot  = 8 * ( norm(toOtherRobot ) @ self.forward + 1 ) * np.sign( np.cross( toOtherRobot , self.forward ) @ np.array( [0,-1,0] ) )
 
         if mag( destination - redCentre   ) < 0.1 or mag( direction ) < 0.4 or mag( toRedCentre   ) > 0.4 or self.z < 0:
             deflectRed = 0
@@ -327,7 +297,7 @@ class Jasmine(Robot):
             deflectGreen = 0
 
         # how much we want the robot to turn
-        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 50 + deflectGreen + deflectRed, -5, 5 )
+        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 50 + deflectGreen + deflectRed + deflectRobot, -5, 5 )
 
         # get a baseSpeed value - slow if we're close to the destination but not facing it and otherwise fast
         baseSpeed = 10.0 - min( abs(turnAmount) * 15 * (mag(direction) < 0.15),  10 )
@@ -608,6 +578,7 @@ class Jasmine(Robot):
             self.updateDistance()
             self.updateSchedule()
             self.updateRecieverEmitter()
+
 
             # call the current behaviour function
             self.behaviour()
