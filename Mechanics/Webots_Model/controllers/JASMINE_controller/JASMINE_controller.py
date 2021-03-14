@@ -316,7 +316,7 @@ class Jasmine(Robot):
 
         toRedCentre   = redCentre   - self.pos
         toGreenCentre = greenCentre - self.pos
-        toOtherRobot  = np.array([self.otherRobot[0], 0, self.otherRobot[1]]) - self.pos
+        toOtherRobot  = np.array([self.otherRobot[0][0], 0, self.otherRobot[0][1]]) - self.pos
 
         deflectRed    = 15 * ( norm(toRedCentre  ) @ self.forward + 1 ) * np.sign( np.cross( toRedCentre  , self.forward ) @ np.array( [0,-1,0] ) )
         deflectGreen  = 15 * ( norm(toGreenCentre) @ self.forward + 1 ) * np.sign( np.cross( toGreenCentre, self.forward ) @ np.array( [0,-1,0] ) )
