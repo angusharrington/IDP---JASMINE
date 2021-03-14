@@ -288,7 +288,7 @@ class Jasmine(Robot):
 
         deflectRed    = 15 * ( norm(toRedCentre  ) @ self.forward + 1 ) * np.sign( np.cross( toRedCentre  , self.forward ) @ np.array( [0,-1,0] ) )
         deflectGreen  = 15 * ( norm(toGreenCentre) @ self.forward + 1 ) * np.sign( np.cross( toGreenCentre, self.forward ) @ np.array( [0,-1,0] ) )
-        deflectRobot  = 15 * ( norm(toOtherRobot ) @ self.forward + 1 ) * np.sign( np.cross( toOtherRobot , self.forward ) @ np.array( [0,-1,0] ) )
+        deflectRobot  = 20 * ( norm(toOtherRobot ) @ self.forward + 1 ) * np.sign( np.cross( toOtherRobot , self.forward ) @ np.array( [0,-1,0] ) )
 
         if mag( destination - redCentre   ) < 0.1 or mag( direction ) < 0.4 or mag( toRedCentre   ) > 0.4 or self.z < 0:
             deflectRed = 0
@@ -429,7 +429,8 @@ class Jasmine(Robot):
         p3 = np.ndarray.tolist(centre + gpsToSide*(rot.dot(ahead)) + ahead*gpsToFront)
         p4 = np.ndarray.tolist(centre - gpsToSide*(rot.dot(ahead)) + ahead*gpsToFront)
 
-        fourCorners = [p1, p2, p3, p4] 
+        fudge = np.array([0.05, 0.05])
+        fourCorners = [p1 + fudge, p2 + fudge, p3 + fudge, p4 + fudge] 
 
         # get the distances to all the other colour boxes
         closeToOtherColourBoxes = [ mag(objLoc - box) < 0.05 for box in self.otherColourBoxes ]
@@ -502,16 +503,30 @@ class Jasmine(Robot):
             # if its the wrong colour call releaseBlock 
             self.releaseBlock()
 
+    def reverse(self):
+        self.behaviour = lambda : self.setWheelSpeeds( -3.0, -3.0 )
+
 
     def releaseBlock(self):
 
+
         # lift the claw and reverse the motors
         self.clawMotor.setPosition( 0.5 )
-        self.setWheelSpeeds( -7.0, -7.0 )
+        toOtherRobot  = np.array([self.otherRobot[0][0], 0, self.otherRobot[0][1]]) - self.pos
 
-        # schedule locationsRoute and set behaviour to nothing
-        self.behaviour = lambda : None
-        self.schedule( 1000, self.locationsRoute )
+        if mag(toOtherRobot) < 0.7 and self.colour == Colour.RED:
+            self.setWheelSpeeds(0.0, 0.0)
+
+            self.schedule( 3000, self.reverse)
+            self.schedule( 5000, self.locationsRoute )
+
+
+        else:
+            self.setWheelSpeeds( -3.0, -3.0 )
+
+            # schedule locationsRoute and set behaviour to nothing
+            self.behaviour = lambda : None
+            self.schedule( 2000, self.locationsRoute )
 
          
     def sendBoxLocation(self):
