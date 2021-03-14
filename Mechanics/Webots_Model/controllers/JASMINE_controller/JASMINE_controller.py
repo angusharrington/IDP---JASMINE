@@ -300,10 +300,10 @@ class Jasmine(Robot):
             deflectRobot = 0
 
         # how much we want the robot to turn
-        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 50 + deflectGreen + deflectRed + deflectRobot, -5, 5 )
+        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 30 + deflectGreen + deflectRed + deflectRobot, -3, 3 )
 
         # get a baseSpeed value - slow if we're close to the destination but not facing it and otherwise fast
-        baseSpeed = 10.0 - min( abs(turnAmount) * 15 * (mag(direction) < 0.15),  10 )
+        baseSpeed = 5.0 - min( abs(turnAmount) * 15 * (mag(direction) < 0.15),  5 )
 
         # set the wheel speeds based on these values
         self.setWheelSpeeds( baseSpeed + turnAmount, baseSpeed - turnAmount )
