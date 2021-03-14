@@ -429,7 +429,7 @@ class Jasmine(Robot):
         p3 = np.ndarray.tolist(centre + gpsToSide*(rot.dot(ahead)) + ahead*gpsToFront)
         p4 = np.ndarray.tolist(centre - gpsToSide*(rot.dot(ahead)) + ahead*gpsToFront)
 
-        fudge = np.array([0.05, 0.05])
+        fudge = np.array([0.2, 0.2])
         fourCorners = [p1 + fudge, p2 + fudge, p3 + fudge, p4 + fudge] 
 
         # get the distances to all the other colour boxes
@@ -501,32 +501,32 @@ class Jasmine(Robot):
             self.sendBoxLocation()
 
             # if its the wrong colour call releaseBlock 
-            self.releaseBlock()
+            self.releaseBlock(falseCheck = True)
 
     def reverse(self):
         self.behaviour = lambda : self.setWheelSpeeds( -3.0, -3.0 )
 
 
-    def releaseBlock(self):
+    def releaseBlock(self, falseCheck=False):
 
 
         # lift the claw and reverse the motors
         self.clawMotor.setPosition( 0.5 )
         toOtherRobot  = np.array([self.otherRobot[0][0], 0, self.otherRobot[0][1]]) - self.pos
 
-        if mag(toOtherRobot) < 0.7 and self.colour == Colour.RED:
+        if mag(toOtherRobot) < 0.8 and falseCheck is False:
             self.setWheelSpeeds(0.0, 0.0)
 
             self.schedule( 3000, self.reverse)
-            self.schedule( 5000, self.locationsRoute )
+            self.schedule( 4500, self.locationsRoute )
 
 
         else:
-            self.setWheelSpeeds( -3.0, -3.0 )
+            self.setWheelSpeeds( -4.0, -4.0 )
 
             # schedule locationsRoute and set behaviour to nothing
             self.behaviour = lambda : None
-            self.schedule( 2000, self.locationsRoute )
+            self.schedule( 1500, self.locationsRoute )
 
          
     def sendBoxLocation(self):
