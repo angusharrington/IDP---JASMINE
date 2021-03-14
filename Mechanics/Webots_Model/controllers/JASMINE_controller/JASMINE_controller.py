@@ -288,7 +288,7 @@ class Jasmine(Robot):
 
         deflectRed    = 15 * ( norm(toRedCentre  ) @ self.forward + 1 ) * np.sign( np.cross( toRedCentre  , self.forward ) @ np.array( [0,-1,0] ) )
         deflectGreen  = 15 * ( norm(toGreenCentre) @ self.forward + 1 ) * np.sign( np.cross( toGreenCentre, self.forward ) @ np.array( [0,-1,0] ) )
-        deflectRobot  = 8 * ( norm(toOtherRobot ) @ self.forward + 1 ) * np.sign( np.cross( toOtherRobot , self.forward ) @ np.array( [0,-1,0] ) )
+        deflectRobot  = 15 * ( norm(toOtherRobot ) @ self.forward + 1 ) * np.sign( np.cross( toOtherRobot , self.forward ) @ np.array( [0,-1,0] ) )
 
         if mag( destination - redCentre   ) < 0.1 or mag( direction ) < 0.4 or mag( toRedCentre   ) > 0.4 or self.z < 0:
             deflectRed = 0
