@@ -57,6 +57,7 @@ class Jasmine(Robot):
         self.directionCleared = np.array( [1,0,0] ) # direction that we have cleared up to on the current point - starting from 1, 0, 0
         self.ourColourBoxes   = []
         self.otherColourBoxes = []
+        self.othersPoints     = 0
  
 
         # Robot dependant variables
@@ -166,7 +167,7 @@ class Jasmine(Robot):
     def updateColourSensors(self):
     
         self.greenLevel = self.greenSensor.getValue() 
-        self.redLevel   = self.redSensor.getValue() 
+        self.redLevel   = self.redSensor.getValue()
 
 
     def updatePositionAndVelocity(self):
@@ -204,12 +205,19 @@ class Jasmine(Robot):
         if self.receiver.getQueueLength() > 0:
             
             data = self.receiver.getData()
+            self.receiver.nextPacket()
 
             if sys.getsizeof(data) == 57:
-
+                
                 recPosAndVel = np.asarray(struct.unpack("ffffff", data))
                 self.otherRobot = np.array([[recPosAndVel[0], recPosAndVel[1]], [recPosAndVel[2], recPosAndVel[3]], [recPosAndVel[4], recPosAndVel[5]]])
 
+            if sys.getsizeof(data) == 37:
+
+                otherStep = np.asarray(struct.unpack('i', data))
+                otherStep = otherStep[0]
+                self.othersPoints = otherStep
+                
             elif sys.getsizeof(data) == 45:
 
                 boxLoc = np.asarray(struct.unpack("fff", data))
@@ -325,6 +333,8 @@ class Jasmine(Robot):
         # close the claw in case it's open
         self.clawMotor.setPosition( 0 )
 
+
+        
         # all the positions to spin around at
         spinPositions = np.array( [[0, 0, -0.79], [ 0.8, 0, -0.8], [ 0.79, 0, 0], [ 0.8, 0,  0.8],
                                    [0, 0,  0.79], [-0.8, 0,  0.8], [-0.79, 0, 0], [-0.8, 0, -0.8]] )
@@ -333,10 +343,13 @@ class Jasmine(Robot):
         if self.colour == Colour.GREEN:
             spinPositions = np.roll( spinPositions, 3, axis=0 )
 
+        if self.colour == Colour.RED:
+            spinPositions = np.roll( spinPositions, -1, axis=0 )
+
         # when we have searched all the points go home
         if self.pointsSearched == 8:
-            
-            self.behaviour = lambda : self.goToPoint( self.home, self.stop, tolerance=0.1 )
+            home = self.home - 0.1*norm(self.home - self.pos)
+            self.behaviour = lambda : self.goToPoint( home, self.stop, tolerance=0.1 )
             return
 
         # figure out where we have to go now
@@ -366,6 +379,8 @@ class Jasmine(Robot):
             # increment the number of points we've searched, set the direction cleared back to its initial value and call locationsRoute
             self.directionCleared = np.array( [1,0,0] )
             self.pointsSearched += 1
+            pointsSearched = struct.pack('i', self.pointsSearched)
+            self.emitter.send(pointsSearched)
             self.locationsRoute()
 
 
@@ -375,7 +390,6 @@ class Jasmine(Robot):
 
         # check if the right distance sensor detected a downwards step and we should ge the box
         if self.distances[-1, 1] - self.distances[-2,1] < -0.05 and self.shouldGetBox():
-
             # record the time that this happened
             self.boxFirstEdgeTime = self.simTime
 
@@ -420,25 +434,8 @@ class Jasmine(Robot):
         centre = self.otherRobot[0]
         ahead = self.otherRobot[2]
 
-        gpsToFront = 0.3
-        gpsToSide  = 0.085
-        gpsToBack  = 0.15
 
-        p1 = np.ndarray.tolist(centre + gpsToSide*(rot.dot(ahead)) - ahead*gpsToBack)
-        p2 = np.ndarray.tolist(centre - gpsToSide*(rot.dot(ahead)) - ahead*gpsToBack)
-        p3 = np.ndarray.tolist(centre + gpsToSide*(rot.dot(ahead)) + ahead*gpsToFront)
-        p4 = np.ndarray.tolist(centre - gpsToSide*(rot.dot(ahead)) + ahead*gpsToFront)
-
-        fudge = np.array([0.2, 0.2])
-        fourCorners = [p1 + fudge, p2 + fudge, p3 + fudge, p4 + fudge] 
-
-        # get the distances to all the other colour boxes
-        closeToOtherColourBoxes = [ mag(objLoc - box) < 0.05 for box in self.otherColourBoxes ]
-        # if the block is too close to any we've already seen then ignore it unless the simulation has been going for a long time
-        # if True in closeToOtherColourBoxes and self.simTime < 12000:
-        #     return False
-
-        return self.intersect(np.array([objLoc[0], objLoc[2]]), fourCorners) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), greenSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), redSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), arena) == True
+        return mag(np.array([objLoc[0], objLoc[2]]) - centre) > 0.2 and self.intersect(np.array([objLoc[0], objLoc[2]]), greenSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), redSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), arena) == True
             
 
     def startBoxApproach(self):
@@ -493,32 +490,33 @@ class Jasmine(Robot):
         if colour == self.colour:
             self.behaviour = lambda : None
             self.schedule( 500, lambda : self.setBehaviour( lambda : self.goToPoint( self.home, self.releaseBlock, tolerance=0.2 ) ) )
-            
-
+            self.droppingBlock = True
         else:
 
             # tell the other robot the location of this block
             self.sendBoxLocation()
 
             # if its the wrong colour call releaseBlock 
-            self.releaseBlock(falseCheck = True)
+            self.releaseBlock()
 
     def reverse(self):
         self.behaviour = lambda : self.setWheelSpeeds( -3.0, -3.0 )
 
 
-    def releaseBlock(self, falseCheck=False):
+    def releaseBlock(self):
 
 
         # lift the claw and reverse the motors
         self.clawMotor.setPosition( 0.5 )
         toOtherRobot  = np.array([self.otherRobot[0][0], 0, self.otherRobot[0][1]]) - self.pos
 
-        if mag(toOtherRobot) < 0.8 and falseCheck is False:
-            self.setWheelSpeeds(0.0, 0.0)
+        #if self.blocksReturned == 4:
+         #   self.behaviour = lambda : self.goToPoint( self.home, self.stop, tolerance=0.1 )
+          #  return
 
-            self.schedule( 3000, self.reverse)
-            self.schedule( 4500, self.locationsRoute )
+
+        if mag(toOtherRobot) < 0.5 and self.colour == Colour.RED:
+            self.setWheelSpeeds(0.0, 0.0)
 
 
         else:
