@@ -515,7 +515,7 @@ class Jasmine(Robot):
           #  return
 
 
-        if mag(toOtherRobot) < 0.5 and self.colour == Colour.RED:
+        if mag(toOtherRobot) < 0.5 and self.colour == Colour.RED and self.otherRobot[1][0] > 0.001:
             self.setWheelSpeeds(0.0, 0.0)
 
 
