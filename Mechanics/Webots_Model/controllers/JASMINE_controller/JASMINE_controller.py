@@ -56,6 +56,7 @@ class Jasmine(Robot):
         self.boxFirstEdgeTime = None
         self.receivedData     = np.array([])
         self.otherRobot       = np.array([[0, 0], [0, 0], [0, 0]])
+        self.otherRobotPos    = np.array([0, 0, 0])
         self.pointsSearched   = 0 # number of points in the grid that we have spun around completely and cleared
         self.directionCleared = np.array( [1,0,0] ) # direction that we have cleared up to on the current point - starting from 1, 0, 0
         self.ourColourBoxes   = []
@@ -214,6 +215,7 @@ class Jasmine(Robot):
                 
                 recPosAndVel = np.asarray(struct.unpack("ffffff", data))
                 self.otherRobot = np.array([[recPosAndVel[0], recPosAndVel[1]], [recPosAndVel[2], recPosAndVel[3]], [recPosAndVel[4], recPosAndVel[5]]])
+                self.otherRobotPos = np.array([self.otherRobot[0][0], 0, self.otherRobot[0][1]])
 
             if sys.getsizeof(data) == 37:
 
@@ -311,7 +313,7 @@ class Jasmine(Robot):
         turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 30 + deflectGreen + deflectRed + deflectRobot, -3, 3 )
 
         # get a baseSpeed value - slow if we need to turn a lot and otherwise fast
-        baseSpeed = 5.0 - min( abs(turnAmount), 2.5 )
+        baseSpeed = 5.0 - min( abs(turnAmount), 2.5 ) - (mag(direction) < 0.1) * 2.5
 
         # set the wheel speeds based on these values
         self.setWheelSpeeds( baseSpeed + turnAmount, baseSpeed - turnAmount )
@@ -395,7 +397,6 @@ class Jasmine(Robot):
             # record the time that this happened
             self.boxFirstEdgeTime = self.simTime
 
-            
         # check if the left distance sensor detected an upwards step and we already detected a step from the other sensor
         if self.distances[-1, 0] - self.distances[-2, 0] > 0.05 and self.boxFirstEdgeTime is not None:
 
@@ -452,6 +453,13 @@ class Jasmine(Robot):
 
     def goToBox(self, startTime):
 
+        # if we are driving straight towards the other robot then stop
+        if norm( self.otherRobotPos - self.pos ) @ self.forward > 0.8 and mag(self.otherRobotPos - self.pos) < 0.5:
+            self.setWheelSpeeds( 0.0, 0.0 )
+
+        else:
+            self.setWheelSpeeds( 8.0, 8.0 )
+
         # when we detect light on one of the light sensors we have reached the box
         if self.greenLevel > 0.99 or self.redLevel > 0.99:
 
@@ -493,7 +501,7 @@ class Jasmine(Robot):
             self.behaviour = lambda : None
             self.schedule( 500, lambda : self.setBehaviour( lambda : self.goToPoint( self.home, self.releaseBlock, tolerance=0.2 ) ) )
             self.droppingBlock = True
-            
+
         else:
 
             # tell the other robot the location of this block
