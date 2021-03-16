@@ -63,6 +63,7 @@ class Jasmine(Robot):
         self.otherColourBoxes = []
         self.othersPoints     = 0
         self.reverseTime      = 0
+        self.objectAvoider    = 0
 
         # Robot dependant variables
         if sys.argv[1] == "red":
@@ -309,8 +310,11 @@ class Jasmine(Robot):
         if mag( destination - greenCentre ) < 0.1 or mag( direction ) < 0.4 or self.z > 0:
             deflectGreen = 0
 
+        self.objectAvoider += ( self.distances[-1, 0] < 0.2 )*2 - ( self.distances[-1, 1] < 0.2 )*2 + ( self.distances[-1, 0] < 0.2 and self.distances[-1, 1] < 0.2 )*2
+        self.objectAvoider *= 0.99 * ( mag(direction) > 0.15 )
+
         # how much we want the robot to turn
-        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 30 + deflectGreen + deflectRed + deflectRobot, -4, 4 )
+        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 30 + deflectGreen + deflectRed + deflectRobot + self.objectAvoider, -4, 4 )
 
         # get a baseSpeed value - slow if we need to turn a lot and otherwise fast
         baseSpeed = 5.0 - min( abs(turnAmount), 2.5 ) - (mag(direction) < 0.1) * 2.5
