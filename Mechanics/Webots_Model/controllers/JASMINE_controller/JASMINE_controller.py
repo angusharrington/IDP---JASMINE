@@ -301,7 +301,7 @@ class Jasmine(Robot):
 
         deflectRed    = 20 * ( norm(toRedCentre  ) @ self.forward + 1 ) * np.sign( np.cross( toRedCentre  , self.forward ) @ np.array( [0,-1,0] ) ) * smoothStep( mag( toRedCentre   ) )
         deflectGreen  = 20 * ( norm(toGreenCentre) @ self.forward + 1 ) * np.sign( np.cross( toGreenCentre, self.forward ) @ np.array( [0,-1,0] ) ) * smoothStep( mag( toGreenCentre ) )
-        deflectRobot  = 20 * ( norm(toOtherRobot ) @ self.forward + 1 ) * np.sign( np.cross( toOtherRobot , self.forward ) @ np.array( [0,-1,0] ) ) * smoothStep( mag( toOtherRobot  ) )
+        deflectRobot  = 30 * ( norm(toOtherRobot ) @ self.forward + 1 ) * np.sign( np.cross( toOtherRobot , self.forward ) @ np.array( [0,-1,0] ) ) * smoothStep( mag( toOtherRobot  ) )
 
         if mag( destination - redCentre   ) < 0.1 or mag( direction ) < 0.4 or self.z < 0:
             deflectRed = 0
@@ -310,7 +310,7 @@ class Jasmine(Robot):
             deflectGreen = 0
 
         # how much we want the robot to turn
-        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 30 + deflectGreen + deflectRed + deflectRobot, -3, 3 )
+        turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 30 + deflectGreen + deflectRed + deflectRobot, -4, 4 )
 
         # get a baseSpeed value - slow if we need to turn a lot and otherwise fast
         baseSpeed = 5.0 - min( abs(turnAmount), 2.5 ) - (mag(direction) < 0.1) * 2.5
@@ -334,8 +334,6 @@ class Jasmine(Robot):
 
         # close the claw in case it's open
         self.clawMotor.setPosition( 0 )
-
-
         
         # all the positions to spin around at
         spinPositions = np.array( [[0, 0, -0.79], [ 0.8, 0, -0.8], [ 0.79, 0, 0], [ 0.8, 0,  0.8],
@@ -378,7 +376,7 @@ class Jasmine(Robot):
         # if in the next timestep we will cross 0 angle then move onto the next point to search
         nextAngle = self.angle + self.angvel * ( self.timestep / 1000 )
 
-        if self.angle < 0 and nextAngle > 0 and self.boxFirstEdgeTime is None:
+        if self.angle < 0 and nextAngle > 0:
 
             # increment the number of points we've searched, set the direction cleared back to its initial value and call locationsRoute
             self.directionCleared = np.array( [1,0,0] )
@@ -392,8 +390,9 @@ class Jasmine(Robot):
         if self.distances[-2, 1] == 0:
             return
 
-        # check if the right distance sensor detected a downwards step and we should ge the box
+        # check if the right distance sensor detected a downwards step and we should get the box
         if self.distances[-1, 1] - self.distances[-2,1] < -0.05 and self.shouldGetBox():
+
             # record the time that this happened
             self.boxFirstEdgeTime = self.simTime
 
