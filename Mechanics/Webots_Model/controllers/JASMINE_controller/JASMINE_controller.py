@@ -14,6 +14,9 @@ norm = lambda v : v / mag(v)
 # calculate actual distance from the sensor reading
 distanceFromReading = lambda x : (0.32 / x) ** (5/6) - 0.1
 
+shiftedExp = lambda x : np.exp( 24 - 60*x )
+smoothStep = lambda x : shiftedExp(x) / ( 1 + shiftedExp(x) )
+
 # colours enum
 class Colour(Enum):
     RED   = 0
@@ -58,7 +61,7 @@ class Jasmine(Robot):
         self.ourColourBoxes   = []
         self.otherColourBoxes = []
         self.othersPoints     = 0
- 
+        self.reverseTime      = 0
 
         # Robot dependant variables
         if sys.argv[1] == "red":
@@ -294,24 +297,21 @@ class Jasmine(Robot):
         toGreenCentre = greenCentre - self.pos
         toOtherRobot  = np.array([self.otherRobot[0][0], 0, self.otherRobot[0][1]]) - self.pos
 
-        deflectRed    = 15 * ( norm(toRedCentre  ) @ self.forward + 1 ) * np.sign( np.cross( toRedCentre  , self.forward ) @ np.array( [0,-1,0] ) )
-        deflectGreen  = 15 * ( norm(toGreenCentre) @ self.forward + 1 ) * np.sign( np.cross( toGreenCentre, self.forward ) @ np.array( [0,-1,0] ) )
-        deflectRobot  = 20 * ( norm(toOtherRobot ) @ self.forward + 1 ) * np.sign( np.cross( toOtherRobot , self.forward ) @ np.array( [0,-1,0] ) )
+        deflectRed    = 20 * ( norm(toRedCentre  ) @ self.forward + 1 ) * np.sign( np.cross( toRedCentre  , self.forward ) @ np.array( [0,-1,0] ) ) * smoothStep( mag( toRedCentre   ) )
+        deflectGreen  = 20 * ( norm(toGreenCentre) @ self.forward + 1 ) * np.sign( np.cross( toGreenCentre, self.forward ) @ np.array( [0,-1,0] ) ) * smoothStep( mag( toGreenCentre ) )
+        deflectRobot  = 20 * ( norm(toOtherRobot ) @ self.forward + 1 ) * np.sign( np.cross( toOtherRobot , self.forward ) @ np.array( [0,-1,0] ) ) * smoothStep( mag( toOtherRobot  ) )
 
-        if mag( destination - redCentre   ) < 0.1 or mag( direction ) < 0.4 or mag( toRedCentre   ) > 0.4 or self.z < 0:
+        if mag( destination - redCentre   ) < 0.1 or mag( direction ) < 0.4 or self.z < 0:
             deflectRed = 0
 
-        if mag( destination - greenCentre ) < 0.1 or mag( direction ) < 0.4 or mag( toGreenCentre ) > 0.4 or self.z > 0:
+        if mag( destination - greenCentre ) < 0.1 or mag( direction ) < 0.4 or self.z > 0:
             deflectGreen = 0
-
-        if mag( toOtherRobot ) > 0.4:
-            deflectRobot = 0
 
         # how much we want the robot to turn
         turnAmount = np.clip( np.cross( norm(direction), norm( direction + self.forward ) ) @ np.array( [0,1,0] ) * 30 + deflectGreen + deflectRed + deflectRobot, -3, 3 )
 
-        # get a baseSpeed value - slow if we're close to the destination but not facing it and otherwise fast
-        baseSpeed = 5.0 - min( abs(turnAmount) * 15 * (mag(direction) < 0.15),  5 )
+        # get a baseSpeed value - slow if we need to turn a lot and otherwise fast
+        baseSpeed = 5.0 - min( abs(turnAmount), 2.5 )
 
         # set the wheel speeds based on these values
         self.setWheelSpeeds( baseSpeed + turnAmount, baseSpeed - turnAmount )
@@ -348,8 +348,10 @@ class Jasmine(Robot):
 
         # when we have searched all the points go home
         if self.pointsSearched == 8:
-            home = self.home - 0.1*norm(self.home - self.pos)
-            self.behaviour = lambda : self.goToPoint( home, self.stop, tolerance=0.1 )
+
+            # end of the simulation, go home but open the claw first to avoid pushing out the blocks
+            self.clawMotor.setPosition( 1.57 )
+            self.behaviour = lambda : self.goToPoint( self.home, self.stop, tolerance=0.15 )
             return
 
         # figure out where we have to go now
@@ -374,7 +376,7 @@ class Jasmine(Robot):
         # if in the next timestep we will cross 0 angle then move onto the next point to search
         nextAngle = self.angle + self.angvel * ( self.timestep / 1000 )
 
-        if self.angle < 0 and nextAngle > 0:
+        if self.angle < 0 and nextAngle > 0 and self.boxFirstEdgeTime is None:
 
             # increment the number of points we've searched, set the direction cleared back to its initial value and call locationsRoute
             self.directionCleared = np.array( [1,0,0] )
@@ -491,6 +493,7 @@ class Jasmine(Robot):
             self.behaviour = lambda : None
             self.schedule( 500, lambda : self.setBehaviour( lambda : self.goToPoint( self.home, self.releaseBlock, tolerance=0.2 ) ) )
             self.droppingBlock = True
+            
         else:
 
             # tell the other robot the location of this block
@@ -499,32 +502,36 @@ class Jasmine(Robot):
             # if its the wrong colour call releaseBlock 
             self.releaseBlock()
 
-    def reverse(self):
-        self.behaviour = lambda : self.setWheelSpeeds( -3.0, -3.0 )
+
+    def reverseFromBlock(self):
+
+        # vector to the other robot
+        toOtherRobot = np.array([self.otherRobot[0][0], 0, self.otherRobot[0][1]]) - self.pos
+
+        # if we're close to the other robot and its moving then stop
+        if mag(toOtherRobot) < 0.5 and self.otherRobot[1][0] > 0.001:
+        
+            self.setWheelSpeeds(0.0, 0.0)
+
+        # otherwise reverse away from the block
+        else:
+            self.setWheelSpeeds(-4.0, -4.0)
+            self.reverseTime += self.timestep
+
+        # after 1500 ms of reversing call locationsRoute
+        if self.reverseTime > 1500:
+
+            self.locationsRoute()
 
 
     def releaseBlock(self):
 
-
         # lift the claw and reverse the motors
         self.clawMotor.setPosition( 0.5 )
-        toOtherRobot  = np.array([self.otherRobot[0][0], 0, self.otherRobot[0][1]]) - self.pos
 
-        #if self.blocksReturned == 4:
-         #   self.behaviour = lambda : self.goToPoint( self.home, self.stop, tolerance=0.1 )
-          #  return
-
-
-        if mag(toOtherRobot) < 0.5 and self.colour == Colour.RED and self.otherRobot[1][0] > 0.001:
-            self.setWheelSpeeds(0.0, 0.0)
-
-
-        else:
-            self.setWheelSpeeds( -4.0, -4.0 )
-
-            # schedule locationsRoute and set behaviour to nothing
-            self.behaviour = lambda : None
-            self.schedule( 1500, self.locationsRoute )
+        # schedule locationsRoute and set behaviour to stopIfOtherRobotClose
+        self.reverseTime = 0
+        self.behaviour   = self.reverseFromBlock
 
          
     def sendBoxLocation(self):

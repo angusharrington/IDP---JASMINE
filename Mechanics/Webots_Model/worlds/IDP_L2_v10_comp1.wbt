@@ -141,10 +141,15 @@ TexturedBackgroundLight {
   texture "empty_office"
 }
 JASMINE_v4 {
+  hidden rotation_9 -0.9774889204739747 -1.4391698225636177e-07 0.21098675396953898 1.5158897891376391e-05
   translation 0 0.05 0.39
 }
 JASMINE_v4 {
-  hidden rotation_9 -0.9774889204739747 -1.4391698225636177e-07 0.21098675396953898 1.5158897891376391e-05
+  hidden rotation_9 -0.9774889189680301 -1.439169820346395e-07 0.2109867609464897 1.5158897891376391e-05
   translation 0 0.05 -0.39
+  baseColor 0 1 0
   name "JASMINE_red(1)"
+  red_or_green [
+    "green"
+  ]
 }
