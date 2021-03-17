@@ -457,7 +457,7 @@ class Jasmine(Robot):
     def goToBox(self, startTime):
 
         # if we are driving straight towards the other robot then stop
-        if norm( self.otherRobotPos - self.pos ) @ self.forward > 0.8 and mag(self.otherRobotPos - self.pos) < 0.5:
+        if norm( self.otherRobotPos - self.pos ) @ self.forward > 0.6 and mag(self.otherRobotPos - self.pos) < 0.7:
             self.setWheelSpeeds( 0.0, 0.0 )
 
         else:
