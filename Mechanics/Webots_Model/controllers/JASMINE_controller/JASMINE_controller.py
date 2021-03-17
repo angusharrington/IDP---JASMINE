@@ -64,6 +64,7 @@ class Jasmine(Robot):
         self.othersPoints     = 0
         self.reverseTime      = 0
         self.objectAvoider    = 0
+        self.angleSearchSum   = 0
 
         # Robot dependant variables
         if sys.argv[1] == "red":
@@ -196,7 +197,7 @@ class Jasmine(Robot):
         self.forward  = norm( gpsDifference )
 
         # also calculate the angular velocity from the difference in angles and set self.angle
-        self.angvel   = ( newAngle - self.angle ) / ( self.timestep / 1000 )
+        self.angvel   = np.clip( ( newAngle - self.angle ) / ( self.timestep / 1000 ), -0.5, 0.5 )
         self.angle    = newAngle
 
 
@@ -377,16 +378,20 @@ class Jasmine(Robot):
 
     def spinAndFindBox(self):
 
-        # if in the next timestep we will cross 0 angle then move onto the next point to search
-        nextAngle = self.angle + self.angvel * ( self.timestep / 1000 )
+        # increment the angle we have searched over
+        self.angleSearchSum += self.angvel * ( self.timestep / 1000 )
 
-        if self.angle < 0 and nextAngle > 0:
+        # if we have searched over a large enough angle then move onto the next point
+        if self.angleSearchSum > 3.5:
 
             # increment the number of points we've searched, set the direction cleared back to its initial value and call locationsRoute
             self.directionCleared = np.array( [1,0,0] )
+            self.angleSearchSum = 0
             self.pointsSearched += 1
+
             pointsSearched = struct.pack('i', self.pointsSearched)
             self.emitter.send(pointsSearched)
+
             self.locationsRoute()
 
 
