@@ -432,8 +432,6 @@ class Jasmine(Robot):
 
         # other robots 4 corners
         centre = self.otherRobot[0]
-        ahead = self.otherRobot[2]
-
 
         return mag(np.array([objLoc[0], objLoc[2]]) - centre) > 0.2 and self.intersect(np.array([objLoc[0], objLoc[2]]), greenSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), redSquare) == False and self.intersect(np.array([objLoc[0], objLoc[2]]), arena) == True
             
