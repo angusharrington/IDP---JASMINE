@@ -207,7 +207,7 @@ class Jasmine(Robot):
         posVelAndFor = struct.pack('ffffff', self.pos[0], self.pos[2], self.vel[0], self.vel[2], self.forward[0], self.forward[2])
         self.emitter.send(posVelAndFor)
 
-        # update received data
+        # update received data and store depending on size
         if self.receiver.getQueueLength() > 0:
             
             data = self.receiver.getData()
@@ -231,7 +231,7 @@ class Jasmine(Robot):
                 self.ourColourBoxes.append( boxLoc )
 
 
-    # function that tells you if a point lies in a region
+    # function that tells you if a point lies in a region (2D only)
     def intersect(self, point, poly):
 
         x = point[0]
@@ -301,10 +301,12 @@ class Jasmine(Robot):
         toGreenCentre = greenCentre - self.pos
         toOtherRobot  = np.array([self.otherRobot[0][0], 0, self.otherRobot[0][1]]) - self.pos
 
+        # These return big values when the robot gets close to one of them
         deflectRed    = 20 * ( norm(toRedCentre  ) @ self.forward + 1 ) * np.sign( np.cross( toRedCentre  , self.forward ) @ np.array( [0,-1,0] ) ) * smoothStep( mag( toRedCentre   ) )
         deflectGreen  = 20 * ( norm(toGreenCentre) @ self.forward + 1 ) * np.sign( np.cross( toGreenCentre, self.forward ) @ np.array( [0,-1,0] ) ) * smoothStep( mag( toGreenCentre ) )
         deflectRobot  = 30 * ( norm(toOtherRobot ) @ self.forward + 1 ) * np.sign( np.cross( toOtherRobot , self.forward ) @ np.array( [0,-1,0] ) ) * smoothStep( mag( toOtherRobot  ) )
 
+        # Ignore if outside a certain range, or if scehduled to come home and deliver block
         if mag( destination - redCentre   ) < 0.1 or mag( direction ) < 0.4 or self.z < 0:
             deflectRed = 0
 
@@ -347,7 +349,7 @@ class Jasmine(Robot):
         # if its the green robot use the same array rotated along
         if self.colour == Colour.GREEN:
             spinPositions = np.roll( spinPositions, 3, axis=0 )
-
+        # Red starts in opposite corner
         if self.colour == Colour.RED:
             spinPositions = np.roll( spinPositions, -1, axis=0 )
 
@@ -426,7 +428,7 @@ class Jasmine(Robot):
             # after a time of rotationTime, call self.startBoxApproach
             self.schedule( rotationTime, self.startBoxApproach )
 
-
+    # This function determines if the object detected is in one of the coloured square, outside the arena, or the other robot
     def shouldGetBox(self):
 
         # 90 degree CW matrix   
@@ -623,10 +625,6 @@ class Jasmine(Robot):
             # recover from stuck in case we are
             self.recoverFromStuck()
 
-            # can print current behaviour, position and velocity
-            # print( sys.argv[1], self.behaviour )
-            # print( "pos: " + " ".join( ["%.2f" % v for v in self.pos] ) )
-            # print( "vel: " + " ".join( ["%.2f" % v for v in self.vel] ) )
 
 
 Jasmine()
